@@ -1,0 +1,5 @@
+example.system_commands.say_hello_world:
+  kind: system_command
+  cmd:
+  - echo
+  - Hello, World!

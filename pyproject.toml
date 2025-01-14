@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "taskcask"
+version = "0.0.1"
+authors = [
+  { name="Ignytis", email="155588001+ignytis@users.noreply.github.com" },
+]
+description = "A process launcher tool"
+readme = "README.md"
+requires-python = ">=3.11"
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "pydantic>=2.10.5,<3.0.0",
+]
+
+[project.optional-dependencies]
+gui = ["PyQt5"]
+cli = [
+  "click>=8.1.8,<9.0.0",
+]
+
+[project.scripts]
+tcask = "taskcask.cli.main:cmd_group_main"
+
+[project.entry-points."taskcask.task_templates.class_loaders"]
+stdlib = "taskcask.stdlib.task_templates.class_loader:ClassLoader"
+
+[project.entry-points."taskcask.executors.class_loaders"]
+main = "taskcask.stdlib.executors.class_loader:ExecutorClassLoader"
+
+[project.urls]
+Homepage = "https://github.com/ignytis/taskcask"
+
+[tool.hatch.build]
+only-packages = true
