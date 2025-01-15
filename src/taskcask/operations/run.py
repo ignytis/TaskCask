@@ -1,9 +1,11 @@
 import logging
 from typing import List
 
+from ..typedefs import TaskTemplateDefinition
 from ..executors.executor import BaseExecutor
 from ..executors.factory import get_executor_classes
-from ..task_templates.factory import get_task_template_from_dict
+from ..task_templates.class_factory import get_task_template_from_dict
+from ..task_templates.definitions.factory import get_task_template_definitions
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +32,15 @@ def run(target: str, args: List[str]) -> None:
             "APP": "hello"
         }
     }
-    task_tpl = get_task_template_from_dict(task_def)
+    task_tpl_def: TaskTemplateDefinition | None = None
+    for _task_tpl_defs in get_task_template_definitions():
+        if task_template_id in _task_tpl_defs:
+            task_tpl_def = _task_tpl_defs[task_template_id]
+            break
+    if not task_tpl_def:
+        raise Exception(f"Cannot find a task template definition with ID '{task_template_id}'")
+
+    task_tpl = get_task_template_from_dict(task_tpl_def)
 
     executor: BaseExecutor | None = None
     for executor_cls in get_executor_classes():
