@@ -11,6 +11,7 @@ authors = [
 description = "A process launcher tool"
 readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
 
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -23,7 +24,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gui = ["PyQt5"]
 cli = [
   "click>=8.1.8,<9.0.0",
 ]
