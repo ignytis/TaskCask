@@ -1,13 +1,17 @@
 import click
 
+from .decorators.taskcask_command import taskcask_command
 from ...operations.run import run
+from ...typedefs import StringKvDict
 
 
-@click.command(name="run", help="Runs a command")
-@click.argument("task_template_id")
+@click.command(name="run", help="Runs a command. Target is a task template ID and "
+               "optional execution environment separaterd with '@'")
+@click.argument("target")
 @click.argument('args', nargs=-1)
-def cmd_run(task_template_id: str, args) -> None:
+@taskcask_command
+def cmd_run(target: str, args: list[str], config: StringKvDict) -> None:
     """
     Runs a command with provided arguments
     """
-    run(task_template_id, args)
+    run(target, args)

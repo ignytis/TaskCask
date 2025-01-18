@@ -1,6 +1,6 @@
 from functools import lru_cache
-from pkg_resources import iter_entry_points
-from typing import Generator, List, Type
+from importlib.metadata import entry_points
+from typing import Generator, Type
 
 from .executor import BaseExecutor
 from .class_loader import BaseExecutorClassLoader
@@ -8,8 +8,8 @@ from .class_loader import BaseExecutorClassLoader
 
 @lru_cache
 def get_executor_classes() -> Generator[Type[BaseExecutor], None, None]:
-    executor_classes: List[Type[BaseExecutor]] = []
-    for entry_point in iter_entry_points("taskcask.executors.class_loaders"):
+    executor_classes: list[Type[BaseExecutor]] = []
+    for entry_point in entry_points(group="taskcask.executors.class_loaders"):
         cls = entry_point.load()
         loader: BaseExecutorClassLoader = cls()
         executor_classes += loader.load()

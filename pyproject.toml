@@ -10,7 +10,7 @@ authors = [
 ]
 description = "A process launcher tool"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 license = "MIT"
 
 classifiers = [
@@ -41,7 +41,7 @@ stdlib = "taskcask.stdlib.task_templates.class_loader:ClassLoader"
 stdlib = "taskcask.stdlib.task_templates.definition_loaders.dir_yaml_loader:Loader"
 
 [project.entry-points."taskcask.executors.class_loaders"]
-main = "taskcask.stdlib.executors.class_loader:ExecutorClassLoader"
+stdlib = "taskcask.stdlib.executors.class_loader:ExecutorClassLoader"
 
 [project.urls]
 Homepage = "https://github.com/ignytis/taskcask"

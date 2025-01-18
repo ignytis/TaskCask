@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 from ..typedefs import TaskTemplateDefinition
 from ..executors.executor import BaseExecutor
@@ -10,13 +9,13 @@ from ..task_templates.definitions.factory import get_task_template_definitions
 log = logging.getLogger(__name__)
 
 
-def run(target: str, args: List[str]) -> None:
+def run(target: str, args: list[str]) -> None:
     """
     Runs a command.
 
     Parameters:
         target (str): task template ID + optional execution environment separated with '@'
-        args (List[str]): task arguments
+        args (list[str]): task arguments
     """
     log.info("Running a command...")
 
@@ -24,14 +23,6 @@ def run(target: str, args: List[str]) -> None:
     task_template_id = target_list[0]
     target_env = target_list[1] if len(target_list) > 1 else None
 
-
-    task_def = {
-        "kind": "system_command",
-        "cmd": ["bash", "-c", "echo \"Hello, World! $APP\""],
-        "env": {
-            "APP": "hello"
-        }
-    }
     task_tpl_def: TaskTemplateDefinition | None = None
     for _task_tpl_defs in get_task_template_definitions():
         if task_template_id in _task_tpl_defs:
