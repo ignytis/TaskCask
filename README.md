@@ -8,7 +8,10 @@ Early WIP
 
 ## Usage
 
+See the example [config](examples/config/config.toml) and [task template definitions file](examples/task_templates/system_commands.yaml) 
+
 ```bash
+$ export TASKCASK_CONFIG=$PWD/examples/config/config.toml 
 $ tcask run example.system_commands.say_hello_world.with_env
 
 2025-01-15 23:45:08,692 PID 55838 [INFO] taskcask.operations.run: Running a command...

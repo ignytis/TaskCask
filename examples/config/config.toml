@@ -1,0 +1,2 @@
+[task_template_loaders.dir_yaml]
+path = "%sys.cwd%/examples/task_templates"
