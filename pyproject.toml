@@ -21,6 +21,7 @@ classifiers = [
 
 dependencies = [
   "pydantic>=2.10.5,<3.0.0",
+  "python-configuration>=0.12.1,<0.13.0",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +34,9 @@ yaml = [
 
 [project.scripts]
 tcask = "taskcask.cli.main:cmd_group_main"
+
+[project.entry-points."taskcask.config.builders"]
+stdlib = "taskcask.stdlib.config.builder:build"
 
 [project.entry-points."taskcask.task_templates.class_loaders"]
 stdlib = "taskcask.stdlib.task_templates.class_loader:ClassLoader"

@@ -1,15 +1,16 @@
 import logging
 
-from ..typedefs import TaskTemplateDefinition
+from ..config.types import Config
 from ..executors.executor import BaseExecutor
 from ..executors.factory import get_executor_classes
 from ..task_templates.class_factory import get_task_template_from_dict
 from ..task_templates.definitions.factory import get_task_template_definitions
+from ..typedefs import TaskTemplateDefinition
 
 log = logging.getLogger(__name__)
 
 
-def run(target: str, args: list[str]) -> None:
+def run(target: str, config: Config, args: list[str]) -> None:
     """
     Runs a command.
 
@@ -24,7 +25,7 @@ def run(target: str, args: list[str]) -> None:
     target_env = target_list[1] if len(target_list) > 1 else None
 
     task_tpl_def: TaskTemplateDefinition | None = None
-    for _task_tpl_defs in get_task_template_definitions():
+    for _task_tpl_defs in get_task_template_definitions(config):
         if task_template_id in _task_tpl_defs:
             task_tpl_def = _task_tpl_defs[task_template_id]
             break

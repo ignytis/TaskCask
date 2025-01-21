@@ -1,11 +1,11 @@
 from pydantic import BaseModel
 
-from ..typedefs import StringKvDict
+from ..typedefs import StringKvDict, StringKeyDict
 
 
 class RuntimeParams(BaseModel):
-    args: list[str]
-    kwargs: StringKvDict
+    args: list[str] = []
+    kwargs: StringKvDict = {}
 
     @staticmethod
     def from_kwargs(kwargs) -> "RuntimeParams":
@@ -27,4 +27,4 @@ class RuntimeParams(BaseModel):
 
 class Config(BaseModel):
     runtime_params: RuntimeParams
-    task_template_loaders: dict = {}  # task loader configuration
+    task_template_loaders: StringKeyDict = {}  # task loader configuration
