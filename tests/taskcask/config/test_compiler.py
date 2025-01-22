@@ -20,6 +20,8 @@ class CompilerTest(TestCase):
         cfg = compiler.compile_config({
             "misc.sample_key": "sample_value",
             "misc.attr_to_override": "overridden",
+            "sys.cwd": "/path/one",
+            "sys.home": "/path/two",
         })
 
         self.assertDictEqual(cfg.model_dump(), {
@@ -27,6 +29,10 @@ class CompilerTest(TestCase):
                 "sample_key": "sample_value",
                 "builder_key": "builder_value",
                 "attr_to_override": "overridden",
+            },
+            "sys": {
+                "cwd": "/path/one",
+                "home": "/path/two",
             },
             "task_template_loaders": {
                 "sample_loader": {
