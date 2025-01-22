@@ -1,20 +1,28 @@
-from unittest.mock import patch
+from unittest import TestCase
+from unittest.mock import patch, mock_open
 
 
-@patch("pathlib.Path.cwd")
-@patch("pathlib.Path.home")
-def test_builder(home, cwd):
-    home.return_value = "/home/mock_user"
-    cwd.return_value = "/var/mock_cwd"
+CONFIG_CONTENTS = b"""\
+[task_template_loaders.dir_yaml]
+path = "%sys.home%/my_app/my_templates"
+"""
 
-    from taskcask.config import types as cfg_types
-    from taskcask.stdlib.config import builder
 
-    cfg = cfg_types.Config(
-        runtime_params=cfg_types.RuntimeParams(),
-    )
+class BuilderTest(TestCase):
+    @patch("pathlib.Path.cwd")
+    @patch("pathlib.Path.home")
+    @patch("builtins.open", new_callable=mock_open, read_data=CONFIG_CONTENTS)
+    def test_builder(self, _mock_file, home, cwd):
+        home.return_value = "/home/mock_user"
+        cwd.return_value = "/var/mock_cwd"
 
-    builder.build(cfg)
+        from taskcask.stdlib.config import builder
 
-    assert cfg.task_template_loaders.get("dir_yaml", {}).get("path") == \
-        "/var/mock_cwd/examples/task_templates/system_commands.yaml"
+        cfg = {}
+        builder.build(cfg)
+
+        self.assertDictEqual(cfg, {
+            "sys.cwd": "/var/mock_cwd",
+            "sys.home": "/home/mock_user",
+            "task_template_loaders.dir_yaml.path": "%sys.home%/my_app/my_templates"
+        })

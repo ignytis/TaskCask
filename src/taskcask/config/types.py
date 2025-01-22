@@ -26,5 +26,7 @@ class RuntimeParams(BaseModel):
 
 
 class Config(BaseModel):
-    runtime_params: RuntimeParams
-    task_template_loaders: StringKeyDict = {}  # task loader configuration
+    task_template_loaders: dict[str, dict] = {}
+    """Task template loader configuration. Key is loader ID, value is config"""
+    misc: StringKeyDict = {}
+    """User-defined values"""

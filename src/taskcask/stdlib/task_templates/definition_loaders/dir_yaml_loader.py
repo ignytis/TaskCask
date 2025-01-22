@@ -29,6 +29,6 @@ class Loader(BaseTaskTemplateDefinitionLoader):
 
         loader_cfg = LoaderConfig.model_validate(config.task_template_loaders.get("dir_yaml"))
         for loader_cfg_path in loader_cfg.path.split(":"):
-            for path in Path(loader_cfg_path).rglob('*.yaml'):
+            for path in Path(loader_cfg_path).rglob("*.yaml"):
                 with open(path) as f:
                     yield yaml.load(f, Loader=yaml.loader.FullLoader)

@@ -22,7 +22,8 @@ def run(target: str, config: Config, args: list[str]) -> None:
 
     target_list = target.split("@")
     task_template_id = target_list[0]
-    target_env = target_list[1] if len(target_list) > 1 else None
+    # TODO: implement
+    # target_env = target_list[1] if len(target_list) > 1 else None
 
     task_tpl_def: TaskTemplateDefinition | None = None
     for _task_tpl_defs in get_task_template_definitions(config):
