@@ -2,14 +2,14 @@ import logging
 import re
 from typing import Sequence
 
-from ..typedefs import StringKeyDict
+from ..typedefs import StringKeyDict, StringKvDict
 from .factory import get_config_builders
 from .types import Config
 
 
 log = logging.getLogger(__name__)
 
-RE_PLACEHOLDER = re.compile(r"%[a-zA-Z_0-9.-]+%")
+RE_PLACEHOLDER = re.compile(r"%([a-zA-Z_0-9._-]+)%")
 
 
 def _kwargs_to_dict(kwargs: StringKeyDict | Sequence[str] | None = None) -> StringKeyDict:
@@ -71,25 +71,51 @@ def _unflatten_dict(data: StringKeyDict):
     return unflattened_dict
 
 
-def _interpolate(config: StringKeyDict) -> None:
-    are_replacements_left = True
-    while are_replacements_left:
-        nr_replacements_before = len(_get_items_to_replace(config))
-        replacements = {f"%{k}%": v for k, v in config.items() if isinstance(v, str) and not RE_PLACEHOLDER.match(v)}
-        for cfg_key, cfg_val in config.items():
-            for replacement_key in replacements.keys():
-                if replacement_key in cfg_val:
-                    config[cfg_key] = cfg_val.replace(replacement_key, replacements[replacement_key])
+def topological_sort(graph):
+    # Dictionary to keep track of visited status: 0 - not visited, 1 - visiting, 2 - visited
+    visited = {}
+    stack = []
 
-        replacements_after = _get_items_to_replace(config)
-        nr_replacements_after = len(replacements_after)
-        if nr_replacements_after > 0 and nr_replacements_after >= nr_replacements_before:
-            # No placeholders replaced, but there are still any
-            log.error("Failed to resolve:")
-            for k, v in replacements_after.items():
-                log.error(f"{k} = {v}")
-            raise Exception("Cannot resolve placeholders in configuration")
-        are_replacements_left = nr_replacements_after > 0
+    def dfs(node):
+        if visited.get(node) == 1:
+            raise ValueError(f"A circular reference to '{node}' detected")
+
+        # If node has not been visited before, mark it as visiting
+        if visited.get(node) == 0:
+            visited[node] = 1  # Mark as visiting
+            for neighbor in graph[node]:
+                dfs(neighbor)
+            visited[node] = 2  # Mark as visited
+            stack.append(node)
+
+    # Initialize all nodes as not visited
+    for node in graph:
+        visited[node] = 0
+
+    # Perform DFS for all nodes not yet visited
+    for node in graph:
+        if visited[node] == 0:
+            dfs(node)
+
+    return stack
+
+
+def _interpolate(config: StringKeyDict) -> None:
+    # Dependency tree: parents depend on children
+    dep_kv: StringKvDict = {}
+    for parent, v in config.items():
+        children = RE_PLACEHOLDER.findall(v)
+        dep_kv[parent] = children
+
+    sorted_cfg_keys = topological_sort(dep_kv)
+    for cfg_key in sorted_cfg_keys:
+        children_keys = dep_kv[cfg_key]
+        for child_key in children_keys:
+            if child_key not in config:
+                raise ValueError(f"Key '{child_key}' not found in config")
+            if not isinstance(config[child_key], str):
+                continue
+            config[cfg_key] = config[cfg_key].replace(f"%{child_key}%", config[child_key])
 
 
 # Credits: https://stackoverflow.com/a/7205107
