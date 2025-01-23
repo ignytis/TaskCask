@@ -83,7 +83,10 @@ class CompilerTest(TestCase):
         """
         A recursive interpolation with circilar reference
         """
-        with self.assertRaisesRegex(ValueError, "A circular reference to 'misc.recursion_level_1' detected"):
+        with self.assertRaisesRegex(
+                ValueError,
+                "A circular reference detected: misc.recursion_level_1 -> misc.recursion_level_3 -> "
+                "task_template_loaders.sample_loader.recursion_level_2 -> misc.recursion_level_1"):
             compiler.compile_config({
                 "misc.sample_key": "sample_value",
                 "misc.recursion_level_1": "abc %misc.recursion_level_3%",

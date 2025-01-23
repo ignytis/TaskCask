@@ -71,6 +71,12 @@ def _unflatten_dict(data: StringKeyDict):
     return unflattened_dict
 
 
+class CircularReferenceException(Exception):
+    def __init__(self, stack: list[str], *args):
+        super().__init__(*args)
+        self.stack = stack
+
+
 def topological_sort(graph):
     # Dictionary to keep track of visited status: 0 - not visited, 1 - visiting, 2 - visited
     visited = {}
@@ -78,13 +84,17 @@ def topological_sort(graph):
 
     def dfs(node):
         if visited.get(node) == 1:
-            raise ValueError(f"A circular reference to '{node}' detected")
+            raise CircularReferenceException([node])
+            # raise ValueError(f"A circular reference to '{node}' detected")
 
         # If node has not been visited before, mark it as visiting
         if visited.get(node) == 0:
             visited[node] = 1  # Mark as visiting
             for neighbor in graph[node]:
-                dfs(neighbor)
+                try:
+                    dfs(neighbor)
+                except CircularReferenceException as e:
+                    raise CircularReferenceException([node] + e.stack)
             visited[node] = 2  # Mark as visited
             stack.append(node)
 
@@ -107,7 +117,11 @@ def _interpolate(config: StringKeyDict) -> None:
         children = RE_PLACEHOLDER.findall(v)
         dep_kv[parent] = children
 
-    sorted_cfg_keys = topological_sort(dep_kv)
+    try:
+        sorted_cfg_keys = topological_sort(dep_kv)
+    except CircularReferenceException as e:
+        stack = " -> ".join(e.stack)
+        raise ValueError(f"A circular reference detected: {stack}")
     for cfg_key in sorted_cfg_keys:
         children_keys = dep_kv[cfg_key]
         for child_key in children_keys:
