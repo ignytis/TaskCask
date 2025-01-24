@@ -9,8 +9,7 @@ from .types import Config
 
 log = logging.getLogger(__name__)
 
-RE_PLACEHOLDER_NO_PERCENT = re.compile(r"[^%]?%([a-zA-Z_0-9._-]+)%[^%]?")
-RE_PLACEHOLDER = re.compile(r"%([^%]+)%")
+RE_PLACEHOLDER = re.compile(r"%([a-zA-Z_0-9._-]+)%")
 
 
 def _kwargs_to_dict(kwargs: StringKeyDict | Sequence[str] | None = None) -> StringKeyDict:
@@ -140,7 +139,7 @@ def _interpolate(config: StringKeyDict) -> None:
     # Dependency tree: parents depend on children
     dep_kv: StringKvDict = {}
     for parent, v in config.items():
-        children = RE_PLACEHOLDER_NO_PERCENT.findall(v)
+        children = RE_PLACEHOLDER.findall(v)
         dep_kv[parent] = children
 
     try:
