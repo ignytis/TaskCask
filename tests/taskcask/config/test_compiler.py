@@ -29,13 +29,15 @@ class CompilerTest(TestCase):
         cfg = compiler.compile_config({
             "misc.sample_key": "sample_value",
             "misc.val_from_builder_override": "overridden",
+            "misc.val_interpolate": "test %misc.val_from_builder_override%",
         })
 
-        self.assertDictEqual(cfg.model_dump(), {
+        self.assertDictEqual({
             "misc": {
                 "sample_key": "sample_value",
                 "val_from_builder": "builder_value",
                 "val_from_builder_override": "overridden",
+                "val_interpolate": "test overridden",
             },
             "sys": {
                 "cwd": "/path/one",
@@ -46,7 +48,45 @@ class CompilerTest(TestCase):
                     "loader_param": "hello"
                 }
             },
+        }, cfg.model_dump())
+
+    def test_simple_error_val_not_found(self):
+        """
+        A missing value
+        """
+        with self.assertRaisesRegex(ValueError, "Keys not found in config: sample_missing_value"):
+            compiler.compile_config({
+                "misc.sample_key": "sample_value",
+                "misc.sample_key_2": r"test %sample_missing_value%",
+            })
+
+    def test_builder_escaped_val(self):
+        """
+        Escaped percentage charactef
+        """
+        cfg = compiler.compile_config({
+            "misc.sample_key": "sample_value",
+            "misc.val_from_builder_override": "overridden",
+            "misc.val_do_not_interpolate": r"test %%misc.val_from_builder_override%%",
         })
+
+        self.assertDictEqual({
+            "misc": {
+                "sample_key": "sample_value",
+                "val_from_builder": "builder_value",
+                "val_from_builder_override": "overridden",
+                "val_do_not_interpolate": "test %misc.val_from_builder_override%",
+            },
+            "sys": {
+                "cwd": "/path/one",
+                "home": "/path/two",
+            },
+            "task_template_loaders": {
+                "sample_loader": {
+                    "loader_param": "hello"
+                }
+            },
+        }, cfg.model_dump())
 
     def test_recusive_valid(self):
         """
@@ -59,7 +99,7 @@ class CompilerTest(TestCase):
             "task_template_loaders.sample_loader.recursion_level_2": "Level 1: %misc.recursion_level_1%",
         })
 
-        self.assertDictEqual(cfg.model_dump(), {
+        self.assertDictEqual({
             "misc": {
                 "sample_key": "sample_value",
                 "val_from_builder": "builder_value",
@@ -77,9 +117,9 @@ class CompilerTest(TestCase):
                     "recursion_level_2": "Level 1: abc",
                 }
             },
-        })
+        }, cfg.model_dump())
 
-    def test_recusive_invalid_circular(self):
+    def test_recusive_error_circular_reference(self):
         """
         A recursive interpolation with circilar reference
         """
@@ -92,14 +132,4 @@ class CompilerTest(TestCase):
                 "misc.recursion_level_1": "abc %misc.recursion_level_3%",
                 "misc.recursion_level_3": "Level 2: %task_template_loaders.sample_loader.recursion_level_2%",
                 "task_template_loaders.sample_loader.recursion_level_2": "Level 1: %misc.recursion_level_1%",
-            })
-
-    def test_simple_val_not_found(self):
-        """
-        A missing value
-        """
-        with self.assertRaisesRegex(ValueError, "Key 'sample_missing_value' not found in config"):
-            compiler.compile_config({
-                "misc.sample_key": "sample_value",
-                "misc.sample_key_2": "test %sample_missing_value%",
             })

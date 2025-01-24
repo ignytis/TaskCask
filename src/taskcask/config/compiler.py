@@ -9,7 +9,8 @@ from .types import Config
 
 log = logging.getLogger(__name__)
 
-RE_PLACEHOLDER = re.compile(r"%([a-zA-Z_0-9._-]+)%")
+RE_PLACEHOLDER_NO_PERCENT = re.compile(r"[^%]?%([a-zA-Z_0-9._-]+)%[^%]?")
+RE_PLACEHOLDER = re.compile(r"%([^%]+)%")
 
 
 def _kwargs_to_dict(kwargs: StringKeyDict | Sequence[str] | None = None) -> StringKeyDict:
@@ -32,10 +33,6 @@ def _kwargs_to_dict(kwargs: StringKeyDict | Sequence[str] | None = None) -> Stri
         kwargs = _kwargs
 
     return kwargs
-
-
-def _get_items_to_replace(config: StringKeyDict) -> StringKeyDict:
-    return {k: v for k, v in config.items() if isinstance(v, str) and RE_PLACEHOLDER.match(v)}
 
 
 def _unescape(input_data):
@@ -77,7 +74,7 @@ class CircularReferenceException(Exception):
         self.stack = stack
 
 
-def topological_sort(graph):
+def _topological_sort(graph):
     # Dictionary to keep track of visited status: 0 - not visited, 1 - visiting, 2 - visited
     visited = {}
     stack = []
@@ -85,7 +82,6 @@ def topological_sort(graph):
     def dfs(node):
         if visited.get(node) == 1:
             raise CircularReferenceException([node])
-            # raise ValueError(f"A circular reference to '{node}' detected")
 
         # If node has not been visited before, mark it as visiting
         if visited.get(node) == 0:
@@ -110,26 +106,56 @@ def topological_sort(graph):
     return stack
 
 
+def _render_value(value: str, replacements: StringKeyDict) -> str:
+    """
+    Replace placeholders (%abc%) with values.
+    Skip the escaped values (%%abc%%)
+    """
+    # -1 because non-inclusive end()
+    idxs: list[int] = [(m.start(), m.end()-1) for m in RE_PLACEHOLDER.finditer(value)]
+    # Check occurrences in reverse order: this way updates in string will not affect the
+    # previously located indexes
+    idxs.reverse()
+    for idx_start, idx_end in idxs:
+        idx_last_char = len(value) - 1
+        char_before = None if idx_start == 0 else value[idx_start-1]
+        char_after = None if idx_end == idx_last_char else value[idx_end+1]
+        is_escape_before = "%" == char_before
+        is_escape_after = "%" == char_after
+        # Escape sequence found: unescape
+        if is_escape_before and is_escape_after:
+            continue
+
+        # No escape sequence found: replace the value
+        replacement_key = value[idx_start+1:idx_end]
+        if replacement_key not in replacements:
+            raise ValueError(f"Key '{replacement_key}' not found")
+        replace_with = replacements[replacement_key]
+        value = value[:idx_start] + replace_with + value[idx_end+1:]
+
+    return value
+
+
 def _interpolate(config: StringKeyDict) -> None:
     # Dependency tree: parents depend on children
     dep_kv: StringKvDict = {}
     for parent, v in config.items():
-        children = RE_PLACEHOLDER.findall(v)
+        children = RE_PLACEHOLDER_NO_PERCENT.findall(v)
         dep_kv[parent] = children
 
     try:
-        sorted_cfg_keys = topological_sort(dep_kv)
+        sorted_cfg_keys = _topological_sort(dep_kv)
     except CircularReferenceException as e:
         stack = " -> ".join(e.stack)
         raise ValueError(f"A circular reference detected: {stack}")
     for cfg_key in sorted_cfg_keys:
         children_keys = dep_kv[cfg_key]
-        for child_key in children_keys:
-            if child_key not in config:
-                raise ValueError(f"Key '{child_key}' not found in config")
-            if not isinstance(config[child_key], str):
-                continue
-            config[cfg_key] = config[cfg_key].replace(f"%{child_key}%", config[child_key])
+        missing_keys = children_keys - config.keys()
+        if len(missing_keys) > 0:
+            raise ValueError(f'Keys not found in config: {", ".join(missing_keys)}')
+        # Key: placeholder key, value: value to replace with
+        children_replacements = {child_key: config[child_key] for child_key in children_keys}
+        config[cfg_key] = _render_value(config[cfg_key], children_replacements)
 
 
 # Credits: https://stackoverflow.com/a/7205107
@@ -155,5 +181,6 @@ def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Confi
 
     cfg = _merge(cfg, kwargs)
     _interpolate(cfg)
+    cfg = _unescape(cfg)
 
     return Config.model_validate(_unflatten_dict(cfg))
