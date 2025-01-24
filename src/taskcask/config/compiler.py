@@ -111,18 +111,18 @@ def _render_value(value: str, replacements: StringKeyDict) -> str:
     Skip the escaped values (%%abc%%)
     """
     # -1 because non-inclusive end()
-    idxs: list[int] = [(m.start(), m.end()-1) for m in RE_PLACEHOLDER.finditer(value)]
+    idxs: list[int] = [m.span() for m in RE_PLACEHOLDER.finditer(value)]
     # Check occurrences in reverse order: this way updates in string will not affect the
     # previously located indexes
     idxs.reverse()
-    for idx_start, idx_end in idxs:
+    for idx_start, idx_end_noninclusive in idxs:
+        idx_end = idx_end_noninclusive - 1
         idx_last_char = len(value) - 1
         char_before = None if idx_start == 0 else value[idx_start-1]
         char_after = None if idx_end == idx_last_char else value[idx_end+1]
-        is_escape_before = "%" == char_before
-        is_escape_after = "%" == char_after
-        # Escape sequence found: unescape
-        if is_escape_before and is_escape_after:
+        # Escape sequence found: no action.
+        # Unescape will occur on later stage when all references are resolved.
+        if "%" == char_before and "%" == char_after:
             continue
 
         # No escape sequence found: replace the value
