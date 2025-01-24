@@ -5,7 +5,8 @@ from typing import Sequence
 from ..typedefs import StringKeyDict, StringKvDict
 from .factory import get_config_builders
 from .types import Config
-
+from ..utils.algorithms.sort import sort_topological, CircularReferenceException
+from ..utils.dict import dict_merge, dict_unflatten
 
 log = logging.getLogger(__name__)
 
@@ -50,61 +51,6 @@ def _unescape(input_data):
         return input_data
 
 
-def _unflatten_dict(data: StringKeyDict):
-    """
-    Unflattens a dictionary:
-    {"a.b.c": "val"} -> {"a": {"b": {"c": "val"}}}
-    """
-    unflattened_dict = {}
-    for key, value in data.items():
-        sub_keys = key.split(".")
-        current_dict = unflattened_dict
-        for sub_key in sub_keys[:-1]:
-            if sub_key not in current_dict:
-                current_dict[sub_key] = {}
-            current_dict = current_dict[sub_key]
-        current_dict[sub_keys[-1]] = value
-    return unflattened_dict
-
-
-class CircularReferenceException(Exception):
-    def __init__(self, stack: list[str], *args):
-        super().__init__(*args)
-        self.stack = stack
-
-
-def _topological_sort(graph):
-    # Dictionary to keep track of visited status: 0 - not visited, 1 - visiting, 2 - visited
-    visited = {}
-    stack = []
-
-    def dfs(node):
-        if visited.get(node) == 1:
-            raise CircularReferenceException([node])
-
-        # If node has not been visited before, mark it as visiting
-        if visited.get(node) == 0:
-            visited[node] = 1  # Mark as visiting
-            for neighbor in graph[node]:
-                try:
-                    dfs(neighbor)
-                except CircularReferenceException as e:
-                    raise CircularReferenceException([node] + e.stack)
-            visited[node] = 2  # Mark as visited
-            stack.append(node)
-
-    # Initialize all nodes as not visited
-    for node in graph:
-        visited[node] = 0
-
-    # Perform DFS for all nodes not yet visited
-    for node in graph:
-        if visited[node] == 0:
-            dfs(node)
-
-    return stack
-
-
 def _render_value(value: str, replacements: StringKeyDict) -> str:
     """
     Replace placeholders (%abc%) with values.
@@ -143,7 +89,7 @@ def _interpolate(config: StringKeyDict) -> None:
         dep_kv[parent] = children
 
     try:
-        sorted_cfg_keys = _topological_sort(dep_kv)
+        sorted_cfg_keys = sort_topological(dep_kv)
     except CircularReferenceException as e:
         stack = " -> ".join(e.stack)
         raise ValueError(f"A circular reference detected: {stack}")
@@ -157,20 +103,6 @@ def _interpolate(config: StringKeyDict) -> None:
         config[cfg_key] = _render_value(config[cfg_key], children_replacements)
 
 
-# Credits: https://stackoverflow.com/a/7205107
-def _merge(a: dict, b: dict, path=[]):
-    for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                _merge(a[key], b[key], path + [str(key)])
-            else:
-                a[key] = b[key]
-
-        else:
-            a[key] = b[key]
-    return a
-
-
 def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Config:
     kwargs = _kwargs_to_dict(kwargs)
 
@@ -178,8 +110,8 @@ def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Confi
     for build in get_config_builders():
         build(cfg)
 
-    cfg = _merge(cfg, kwargs)
+    cfg = dict_merge(cfg, kwargs)
     _interpolate(cfg)
     cfg = _unescape(cfg)
 
-    return Config.model_validate(_unflatten_dict(cfg))
+    return Config.model_validate(dict_unflatten(cfg))
