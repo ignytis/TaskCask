@@ -9,3 +9,8 @@ cmd = ["echo", "Hello, World!"]
 kind = "system_command"
 cmd = ["bash", "-c", "echo Hello, $NAME! It\\'s \"$(date +%Y-%m-%dT%I:%M:%S)\""]
 env = {"NAME" = "John Doe"}
+
+# List a directory. User can optionally pass the path to directory
+["example.system_commands.list_dir"]
+kind = "system_command"
+cmd = ["ls", "-lah"]

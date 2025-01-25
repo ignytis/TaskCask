@@ -1,21 +1,26 @@
 from ..typedefs import StringKeyDict
 
 
-# Credits: https://stackoverflow.com/a/7205107
-def dict_merge(a: dict, b: dict, path=[]):
+def dict_deep_merge(*dicts: StringKeyDict) -> StringKeyDict:
     """
-    Merges dict b into dict a
+    Deep merge multiple dictionaries recursively.
+    Values in later dictionaries overwrite those in earlier ones.
+    This function does not update any dictionary by reference.
     """
-    for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                dict_merge(a[key], b[key], path + [str(key)])
+    def merge_two_dicts(d1: StringKeyDict, d2: StringKeyDict):
+        merged = d1.copy()
+        for key, value in d2.items():
+            if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+                merged[key] = merge_two_dicts(merged[key], value)
             else:
-                a[key] = b[key]
+                merged[key] = value
+        return merged
 
-        else:
-            a[key] = b[key]
-    return a
+    result = {}
+    for d in dicts:
+        result = merge_two_dicts(result, d)
+
+    return result
 
 
 def dict_unflatten(data: StringKeyDict):

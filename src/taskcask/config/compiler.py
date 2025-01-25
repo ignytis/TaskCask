@@ -6,7 +6,7 @@ from ..typedefs import StringKeyDict, StringKvDict
 from .factory import get_config_builders
 from .types import Config
 from ..utils.algorithms.sort import sort_topological, CircularReferenceException
-from ..utils.dict import dict_merge, dict_unflatten
+from ..utils.dict import dict_deep_merge, dict_unflatten
 
 log = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Confi
     for build in get_config_builders():
         build(cfg)
 
-    cfg = dict_merge(cfg, kwargs)
+    cfg = dict_deep_merge(cfg, kwargs)
     _interpolate(cfg)
     cfg = _unescape(cfg)
 
