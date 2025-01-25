@@ -1,0 +1,11 @@
+# A static text
+["example.system_commands.say_hello_world"]
+kind = "system_command"
+cmd = ["echo", "Hello, World!"]
+
+
+# Text and current time (Unix)
+["example.system_commands.say_hello_world.with_env"]
+kind = "system_command"
+cmd = ["bash", "-c", "echo Hello, $NAME! It\\'s \"$(date +%Y-%m-%dT%I:%M:%S)\""]
+env = {"NAME" = "John Doe"}

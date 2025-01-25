@@ -1,12 +1,12 @@
 # A static text
-example.system_commands.say_hello_world:
+example.yaml.system_commands.say_hello_world:
   kind: system_command
   cmd:
   - echo
   - Hello, World!
 
 # Text and current time (Unix)
-example.system_commands.say_hello_world.with_env:
+example.yaml.system_commands.say_hello_world.with_env2:
   kind: system_command
   cmd:
   - bash

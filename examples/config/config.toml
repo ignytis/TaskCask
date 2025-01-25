@@ -1,2 +1,5 @@
+[task_template_loaders.dir_toml]
+path = "%sys.cwd%/examples/task_templates/toml"
+
 [task_template_loaders.dir_yaml]
-path = "%sys.cwd%/examples/task_templates"
+path = "%sys.cwd%/examples/task_templates/yaml"
