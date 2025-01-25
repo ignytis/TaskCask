@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 
 from ..config.types import Config
@@ -8,6 +9,7 @@ from ..task_templates.task_template import BaseTaskTemplate
 from ..task_templates.class_factory import get_task_template_from_dict
 from ..task_templates.definitions.factory import get_task_template_definitions
 from ..typedefs import TaskTemplateDefinition
+
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +40,11 @@ def run(target: str, config: Config, args: list[str]) -> None:
     )
     executor = _get_executor(task_tpl)
 
+    task.execution_start = datetime.now()
     executor.execute(task)
+    task.execution_end = datetime.now()
+    log.info("Execution started at {} and finished at {}. Time elapsed: {}"
+             .format(task.execution_start, task.execution_start, task.execution_end - task.execution_start))
 
 
 def _get_task_template(config: Config, task_template_id: str) -> BaseTaskTemplate:
@@ -62,5 +68,5 @@ def _get_executor(task_tpl: BaseTaskTemplate) -> BaseExecutor:
 
     if not executor:
         raise Exception("No appropriate executor found. The task was not executed.")
-    
+
     return executor
