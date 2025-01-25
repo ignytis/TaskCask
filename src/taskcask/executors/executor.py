@@ -1,15 +1,15 @@
 from abc import ABC
 
 from ..task import Task
-from ..task_templates.task_template import BaseTaskTemplate
+from ..environments.environment import BaseEnvironment
 
 
 class BaseExecutor(ABC):
     """
     Executor is an object which run a specified task from template on particular environment
     """
-    def supports_task_template(tpl: BaseTaskTemplate) -> bool:
+    def can_execute(task: Task, env: BaseEnvironment) -> bool:
         raise NotImplementedError()
 
-    def execute(self, task: Task) -> None:
+    def execute(self, task: Task, env: BaseEnvironment) -> None:
         raise NotImplementedError()

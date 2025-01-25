@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from ..typedefs import StringKeyDict
+from ..environments.class_factory import EnvironmentType
 
 
 class SysConfig(BaseModel):
@@ -15,6 +16,9 @@ class SysConfig(BaseModel):
 
 class Config(BaseModel):
     sys: SysConfig | None = None
+    """System configuration"""
+    environments: dict[str, EnvironmentType] = {}  # type: ignore
+    """Execution environments setup"""
     task_template_loaders: dict[str, dict] = {}
     """Task template loader configuration. Key is loader ID, value is config"""
     misc: StringKeyDict = {}

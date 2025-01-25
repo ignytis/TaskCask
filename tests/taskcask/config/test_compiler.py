@@ -33,6 +33,7 @@ class CompilerTest(TestCase):
         })
 
         self.assertDictEqual({
+            "environments": {},
             "misc": {
                 "sample_key": "sample_value",
                 "val_from_builder": "builder_value",
@@ -71,6 +72,7 @@ class CompilerTest(TestCase):
         })
 
         self.assertDictEqual({
+            "environments": {},
             "misc": {
                 "sample_key": "sample_value",
                 "val_from_builder": "builder_value",
@@ -100,6 +102,7 @@ class CompilerTest(TestCase):
         })
 
         self.assertDictEqual({
+            "environments": {},
             "misc": {
                 "sample_key": "sample_value",
                 "val_from_builder": "builder_value",

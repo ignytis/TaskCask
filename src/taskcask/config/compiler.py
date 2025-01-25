@@ -85,6 +85,8 @@ def _interpolate(config: StringKeyDict) -> None:
     # Dependency tree: parents depend on children
     dep_kv: StringKvDict = {}
     for parent, v in config.items():
+        if not isinstance(v, str):
+            continue
         children = RE_PLACEHOLDER.findall(v)
         dep_kv[parent] = children
 

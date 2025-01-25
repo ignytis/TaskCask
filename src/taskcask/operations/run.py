@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 
 from ..config.types import Config
+from ..environments.environment import BaseEnvironment
 from ..executors.executor import BaseExecutor
 from ..executors.factory import get_executor_classes
 from ..task import Task
@@ -30,18 +31,17 @@ def run(target: str, config: Config, args: list[str]) -> None:
     elif "@" not in target:
         target += "@"
     [task_template_id, target_env] = target.split("@")
-    # TODO: implement
-    # TODO: add validation. Alphanumeric characters, .-_ for both
+    target_env = _get_target_env(config, target_env)
 
     task_tpl = _get_task_template(config, task_template_id)
     task = Task(
         template=task_tpl,
         args=args,
     )
-    executor = _get_executor(task_tpl)
+    executor = _get_executor(task, target_env)
 
     task.execution_start = datetime.now()
-    executor.execute(task)
+    executor.execute(task, target_env)
     task.execution_end = datetime.now()
     log.info("Execution started at {} and finished at {}. Time elapsed: {}"
              .format(task.execution_start, task.execution_start, task.execution_end - task.execution_start))
@@ -59,10 +59,10 @@ def _get_task_template(config: Config, task_template_id: str) -> BaseTaskTemplat
     return get_task_template_from_dict(task_tpl_def)
 
 
-def _get_executor(task_tpl: BaseTaskTemplate) -> BaseExecutor:
+def _get_executor(task: Task, env: BaseEnvironment) -> BaseExecutor:
     executor: BaseExecutor | None = None
     for executor_cls in get_executor_classes():
-        if executor_cls.supports_task_template(task_tpl):
+        if executor_cls.can_execute(task, env):
             executor = executor_cls()
             break
 
@@ -70,3 +70,14 @@ def _get_executor(task_tpl: BaseTaskTemplate) -> BaseExecutor:
         raise Exception("No appropriate executor found. The task was not executed.")
 
     return executor
+
+
+def _get_target_env(config: Config, target_env: str | None = None) -> BaseEnvironment:
+    if not target_env:
+        target_env = "local"
+
+    env = config.environments.get(target_env)
+    if env is None:
+        raise ValueError(f"Environment '{target_env}' not found in configuration.")
+
+    return env
