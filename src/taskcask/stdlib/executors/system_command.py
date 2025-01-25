@@ -12,7 +12,10 @@ class SystemCommandExecutor(BaseExecutor):
     def supports_task_template(tpl: BaseTaskTemplate) -> bool:
         return isinstance(tpl, SystemCommandTaskTemplate)
 
-    def execute(self, tpl: BaseTaskTemplate):
+    def execute(self, tpl: BaseTaskTemplate, args: list[str] | None = None):
+        if args is None:
+            args = []
         tpl: SystemCommandTaskTemplate = tpl
-        returned_value = subprocess.check_output(tpl.cmd, env=tpl.env).decode("utf-8")
+        cmd = tpl.cmd + args
+        returned_value = subprocess.check_output(cmd, env=tpl.env).decode("utf-8")
         print(returned_value)

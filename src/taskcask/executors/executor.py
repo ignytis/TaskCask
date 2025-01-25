@@ -10,5 +10,5 @@ class BaseExecutor(ABC):
     def supports_task_template(tpl: BaseTaskTemplate) -> bool:
         raise NotImplementedError()
 
-    def execute(self, tpl: BaseTaskTemplate) -> None:
+    def execute(self, tpl: BaseTaskTemplate, args: list[str] | None = None) -> None:
         raise NotImplementedError()

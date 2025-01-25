@@ -10,7 +10,7 @@ from ..typedefs import TaskTemplateDefinition
 log = logging.getLogger(__name__)
 
 
-def run(target: str, config: Config, args: list[str]) -> None:
+def run(target: str, config: Config, args: tuple[str]) -> None:
     """
     Runs a command.
 
@@ -20,9 +20,14 @@ def run(target: str, config: Config, args: list[str]) -> None:
     """
     log.info("Running a command...")
 
-    target_list = target.split("@")
-    task_template_id = target_list[0]
+    if target.count("@") > 1:
+        raise ValueError("Too many '@' characters in target."
+                         "The correct format is: task_template_id[@target_environment]")
+    elif "@" not in target:
+        target += "@"
+    [task_template_id, target_env] = target.split("@")
     # TODO: implement
+    # TODO: add validation. Alphanumeric characters, .-_ for both
     # target_env = target_list[1] if len(target_list) > 1 else None
 
     task_tpl_def: TaskTemplateDefinition | None = None
@@ -44,4 +49,4 @@ def run(target: str, config: Config, args: list[str]) -> None:
     if not executor:
         raise Exception("No appropriate executor found. The task was not executed.")
 
-    executor.execute(task_tpl)
+    executor.execute(task_tpl, list(args))
