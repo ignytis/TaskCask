@@ -1,5 +1,6 @@
 from abc import ABC
 
+from ..task import Task
 from ..task_templates.task_template import BaseTaskTemplate
 
 
@@ -10,5 +11,5 @@ class BaseExecutor(ABC):
     def supports_task_template(tpl: BaseTaskTemplate) -> bool:
         raise NotImplementedError()
 
-    def execute(self, tpl: BaseTaskTemplate, args: list[str] | None = None) -> None:
+    def execute(self, task: Task) -> None:
         raise NotImplementedError()

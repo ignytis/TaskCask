@@ -10,6 +10,6 @@ from ...operations.run import run
               help="Parameter overrides. Can be specified multiple times")
 @click.argument("target")
 @click.argument("args", nargs=-1)
-def cmd_run(target: str, params: list[str], args: tuple[str]) -> None:
+def cmd_run(target: str, params: list[str], args: list[str]) -> None:
     config = compile_config(params)
     run(target, config, args)
