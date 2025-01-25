@@ -8,7 +8,7 @@ Early WIP
 
 ## Usage
 
-See the example [config](examples/config/config.toml) and [task template definitions file](examples/task_templates/system_commands.yaml) 
+See the example [config](examples/config/config.toml) and [task template definitions file](examples/task_templates/toml/system_commands.toml)
 
 ```bash
 $ export TASKCASK_CONFIG=$PWD/examples/config/config.toml 

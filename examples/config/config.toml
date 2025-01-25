@@ -1,5 +1,12 @@
+# Note: this is not implemented yet
+[environments.local]
+kind = "local"
+env = {"CUSTOM_PARAM" = "custom_env_value"}
+
+# Note: this is not implemented yet
+[environments.ssh_server1]
+kind = "ssh"
+host = "example.local"
+
 [task_template_loaders.dir_toml]
 path = "%sys.cwd%/examples/task_templates/toml"
-
-[task_template_loaders.dir_yaml]
-path = "%sys.cwd%/examples/task_templates/yaml"

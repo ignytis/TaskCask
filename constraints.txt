@@ -12,6 +12,5 @@ pydantic_core==2.27.2
 pyflakes==3.2.0
 pytest==8.3.4
 python-configuration==0.12.1
-PyYAML==6.0.2
 setuptools==75.8.0
 typing_extensions==4.12.2

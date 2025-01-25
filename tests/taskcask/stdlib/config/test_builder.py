@@ -3,7 +3,7 @@ from unittest.mock import patch, mock_open
 
 
 CONFIG_CONTENTS = b"""\
-[task_template_loaders.dir_yaml]
+[task_template_loaders.dir_toml]
 path = "%sys.home%/my_app/my_templates"
 """
 
@@ -24,5 +24,5 @@ class BuilderTest(TestCase):
         self.assertDictEqual(cfg, {
             "sys.cwd": "/var/mock_cwd",
             "sys.home": "/home/mock_user",
-            "task_template_loaders.dir_yaml.path": "%sys.home%/my_app/my_templates"
+            "task_template_loaders.dir_toml.path": "%sys.home%/my_app/my_templates"
         })
