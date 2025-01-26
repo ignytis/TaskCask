@@ -2,13 +2,11 @@ import subprocess
 
 from ...environments.environment import BaseEnvironment
 from ...executors.executor import BaseExecutor
-from ...executors.registry import executor
 from ...task import Task
 from ...task_templates.system_command import SystemCommandTaskTemplate
 from ..environments.enviromnent import LocalEnvironment
 
 
-@executor
 class SystemCommandExecutor(BaseExecutor):
     """
     Runs a system command with provided arguments
