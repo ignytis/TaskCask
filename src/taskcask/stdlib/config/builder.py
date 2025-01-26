@@ -5,6 +5,7 @@ import os
 from config import config_from_toml, config_from_env, config_from_dict, ConfigurationSet
 
 from ...typedefs import StringKeyDict
+from ...config.registry import config_builder
 
 PATH_HOME = str(Path.home())
 
@@ -12,6 +13,7 @@ PATH_HOME = str(Path.home())
 log = logging.getLogger(__name__)
 
 
+@config_builder
 def build(config: StringKeyDict) -> None:
     cfgs = [
         config_from_env(prefix="TASKCASK"),

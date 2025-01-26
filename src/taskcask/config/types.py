@@ -1,7 +1,9 @@
+from typing import Callable
+
 from pydantic import BaseModel
 
-from ..typedefs import StringKeyDict
 from ..environments.class_factory import EnvironmentType
+from ..typedefs import StringKeyDict
 
 
 class SysConfig(BaseModel):
@@ -23,3 +25,6 @@ class Config(BaseModel):
     """Task template loader configuration. Key is loader ID, value is config"""
     misc: StringKeyDict = {}
     """User-defined values"""
+
+
+ConfigBuilderFn = Callable[[Config], None]

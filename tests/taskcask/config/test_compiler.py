@@ -12,7 +12,7 @@ def _mock_build(val: dict):
     })
 
 
-with patch("taskcask.config.factory.get_config_builders") as get_config_builders:
+with patch("taskcask.config.registry.get_config_builders") as get_config_builders:
     from taskcask.config import compiler
     get_config_builders.return_value = [_mock_build]
 

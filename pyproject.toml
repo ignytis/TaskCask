@@ -47,6 +47,9 @@ stdlib = "taskcask.stdlib.environments.class_loader:load"
 [project.entry-points."taskcask.executors.class_loaders"]
 stdlib = "taskcask.stdlib.executors.class_loader:ExecutorClassLoader"
 
+[project.entry-points."taskcask.autoloaders"]
+stdlib = "taskcask.stdlib.autoloader"
+
 [project.urls]
 Homepage = "https://github.com/ignytis/taskcask"
 

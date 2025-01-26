@@ -3,7 +3,7 @@ import re
 from typing import Sequence
 
 from ..typedefs import StringKeyDict, StringKvDict
-from .factory import get_config_builders
+from .registry import get_config_builders
 from .types import Config
 from ..utils.algorithms.sort import sort_topological, CircularReferenceException
 from ..utils.dict import dict_deep_merge, dict_unflatten

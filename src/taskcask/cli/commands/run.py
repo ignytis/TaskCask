@@ -1,5 +1,6 @@
 import click
 
+from ...autoloader import load_plugins
 from ...config.compiler import compile_config
 from ...operations.run import run
 
@@ -11,5 +12,6 @@ from ...operations.run import run
 @click.argument("target")
 @click.argument("args", nargs=-1)
 def cmd_run(target: str, params: list[str], args: list[str]) -> None:
+    load_plugins()
     config = compile_config(params)
     run(target, config, args)
