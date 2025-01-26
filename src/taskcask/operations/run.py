@@ -4,7 +4,7 @@ import logging
 from ..config.types import Config
 from ..environments.environment import BaseEnvironment
 from ..executors.executor import BaseExecutor
-from ..executors.factory import get_executor_classes
+from ..executors.registry import get_executor_classes
 from ..task import Task
 from ..task_templates.task_template import BaseTaskTemplate
 from ..task_templates.class_factory import get_task_template_from_dict

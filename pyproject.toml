@@ -44,9 +44,6 @@ toml = "taskcask.stdlib.task_templates.definition_loaders.dir_toml_loader:Loader
 [project.entry-points."taskcask.environments.class_loaders"]
 stdlib = "taskcask.stdlib.environments.class_loader:load"
 
-[project.entry-points."taskcask.executors.class_loaders"]
-stdlib = "taskcask.stdlib.executors.class_loader:ExecutorClassLoader"
-
 [project.entry-points."taskcask.autoloaders"]
 stdlib = "taskcask.stdlib.autoloader"
 
