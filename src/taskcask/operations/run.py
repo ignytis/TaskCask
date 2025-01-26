@@ -1,12 +1,13 @@
 from datetime import datetime
 import logging
+from typing import Type
 
 from ..config.types import Config
 from ..environments.environment import BaseEnvironment
 from ..executors.executor import BaseExecutor
 from ..task import Task
 from ..task_templates.task_template import BaseTaskTemplate
-from ..task_templates.class_factory import get_task_template_from_dict
+from ..task_templates.factory import get_task_template_from_dict
 from ..task_templates.definitions.factory import get_task_template_definitions
 from ..typedefs import TaskTemplateDefinition
 from ..utils.reflection import get_all_subclasses
@@ -60,7 +61,7 @@ def _get_task_template(config: Config, task_template_id: str) -> BaseTaskTemplat
 
 
 def _get_executor(task: Task, env: BaseEnvironment) -> BaseExecutor:
-    executor: BaseExecutor | None = None
+    executor: Type[BaseExecutor] | None = None
     for executor_cls in get_all_subclasses(BaseExecutor):
         if executor_cls.can_execute(task, env):
             executor = executor_cls()

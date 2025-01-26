@@ -3,7 +3,7 @@ import subprocess
 from ...environments.environment import BaseEnvironment
 from ...executors.executor import BaseExecutor
 from ...task import Task
-from ...task_templates.system_command import SystemCommandTaskTemplate
+from ...stdlib.task_templates.system_command import SystemCommandTaskTemplate
 from ..environments.enviromnent import LocalEnvironment
 
 

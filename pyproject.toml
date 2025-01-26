@@ -35,9 +35,6 @@ tcask = "taskcask.cli.main:cmd_group_main"
 [project.entry-points."taskcask.config.builders"]
 stdlib = "taskcask.stdlib.config.builder:build"
 
-[project.entry-points."taskcask.task_templates.class_loaders"]
-stdlib = "taskcask.stdlib.task_templates.class_loader:ClassLoader"
-
 [project.entry-points."taskcask.task_templates.definition_loaders"]
 toml = "taskcask.stdlib.task_templates.definition_loaders.dir_toml_loader:Loader"
 
