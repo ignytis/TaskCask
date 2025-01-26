@@ -81,4 +81,4 @@ def _get_target_env(config: Config, target_env: str | None = None) -> BaseEnviro
     if env is None:
         raise ValueError(f"Environment '{target_env}' not found in configuration.")
 
-    return env
+    return BaseEnvironment.create_from_dict(env)
