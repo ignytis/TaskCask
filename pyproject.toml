@@ -28,6 +28,9 @@ dependencies = [
 cli = [
   "click>=8.1.8,<9.0.0",
 ]
+ssh = [
+  "fabric>=3.2.2,<4.0.0",
+]
 
 [project.scripts]
 tcask = "taskcask.cli.main:cmd_group_main"

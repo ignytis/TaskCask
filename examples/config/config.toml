@@ -1,6 +1,12 @@
 [environments.local]
 kind = "local"
-env = {"CUSTOM_PARAM" = "target_env_value"}
+env = {"CUSTOM_PARAM" = "target_local_env_value"}
+
+[environments.ssh_raspberrypi]
+kind = "ssh"
+host = "raspberrypi"
+user = "pi"
+env = {"CUSTOM_PARAM" = "target_remote_env_value"}
 
 [task_template_loaders.dir_toml]
 # enabled = false
