@@ -16,13 +16,13 @@ class BuilderTest(TestCase):
         home.return_value = "/home/mock_user"
         cwd.return_value = "/var/mock_cwd"
 
-        from taskcask.stdlib.config import builder
+        from taskcask.stdlib.config.builder import ConfigBuilder
 
-        cfg = {}
-        builder.build(cfg)
+        builder = ConfigBuilder()
+        cfg = builder.build({})
 
-        self.assertDictEqual(cfg, {
+        self.assertDictEqual({
             "sys.cwd": "/var/mock_cwd",
             "sys.home": "/home/mock_user",
             "task_template_loaders.dir_toml.path": "%sys.home%/my_app/my_templates"
-        })
+        }, cfg)

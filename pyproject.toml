@@ -32,12 +32,6 @@ cli = [
 [project.scripts]
 tcask = "taskcask.cli.main:cmd_group_main"
 
-[project.entry-points."taskcask.config.builders"]
-stdlib = "taskcask.stdlib.config.builder:build"
-
-[project.entry-points."taskcask.environments.class_loaders"]
-stdlib = "taskcask.stdlib.environments.class_loader:load"
-
 [project.entry-points."taskcask.autoloaders"]
 stdlib = "taskcask.stdlib.autoloader"
 

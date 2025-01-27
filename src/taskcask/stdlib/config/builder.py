@@ -4,28 +4,26 @@ import os
 
 from config import config_from_toml, config_from_env, config_from_dict, ConfigurationSet
 
-from ...typedefs import StringKeyDict
-from ...config.registry import config_builder
-
-PATH_HOME = str(Path.home())
+from ...typedefs import StringKeyDict, ConfigDict
+from ...config.builder import BaseConfigBuilder
 
 
-log = logging.getLogger(__name__)
+class ConfigBuilder(BaseConfigBuilder):
+    log = logging.getLogger(__name__)
 
-
-@config_builder
-def build(config: StringKeyDict) -> None:
-    cfgs = [
-        config_from_env(prefix="TASKCASK"),
-        config_from_dict({
-            "sys": {
-                "cwd": str(Path.cwd()),
-                "home": PATH_HOME,
-            },
-        })
-    ]
-    cfg_path = os.getenv("TASKCASK_CONFIG", f"{PATH_HOME}/.taskcask/config.toml")
-    if cfg_path:
-        cfgs.insert(1, config_from_toml(data=cfg_path, read_from_file=True))
-    cfg_dict: StringKeyDict = ConfigurationSet(*cfgs).as_dict()
-    config.update(cfg_dict)
+    def build(self, config: ConfigDict) -> ConfigDict:
+        path_home = str(Path.home())
+        cfgs = [
+            config_from_env(prefix="TASKCASK"),
+            config_from_dict({
+                "sys": {
+                    "cwd": str(Path.cwd()),
+                    "home": path_home,
+                },
+            })
+        ]
+        cfg_path = os.getenv("TASKCASK_CONFIG", f"{path_home}/.taskcask/config.toml")
+        if cfg_path:
+            cfgs.insert(1, config_from_toml(data=cfg_path, read_from_file=True))
+        new_cfg: StringKeyDict = ConfigurationSet(*cfgs).as_dict()
+        return {**config, **new_cfg}

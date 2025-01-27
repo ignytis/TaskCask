@@ -1,20 +1,22 @@
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
-def _mock_build(val: dict):
-    val.update({
+with patch("taskcask.utils.reflection.get_all_subclasses") as get_config_builders:
+    mock_builder = MagicMock()
+    mock_builder.build.return_value = {
         "misc.val_from_builder": "builder_value",
         "misc.val_from_builder_override": "override_me",
         "sys.cwd": "/path/one",
         "sys.home": "/path/two",
         "task_template_loaders.sample_loader.loader_param": "hello",
-    })
+    }
 
+    mock_builder_class = MagicMock()
+    mock_builder_class.return_value = mock_builder
+    get_config_builders.return_value = [mock_builder_class]
 
-with patch("taskcask.config.registry.get_config_builders") as get_config_builders:
     from taskcask.config import compiler
-    get_config_builders.return_value = [_mock_build]
 
 
 class CompilerTest(TestCase):

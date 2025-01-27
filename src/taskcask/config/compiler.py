@@ -2,11 +2,12 @@ import logging
 import re
 from typing import Sequence
 
-from ..typedefs import StringKeyDict, StringKvDict
-from .registry import get_config_builders
+from .builder import BaseConfigBuilder
+from ..typedefs import ConfigDict, StringKeyDict, StringKvDict
 from .types import Config
 from ..utils.algorithms.sort import sort_topological, CircularReferenceException
 from ..utils.dict import dict_deep_merge, dict_unflatten
+from ..utils.reflection import get_all_subclasses
 
 log = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ def _render_value(value: str, replacements: StringKeyDict) -> str:
     return value
 
 
-def _interpolate(config: StringKeyDict) -> None:
+def _interpolate(config: ConfigDict) -> None:
     # Dependency tree: parents depend on children
     dep_kv: StringKvDict = {}
     for parent, v in config.items():
@@ -108,9 +109,10 @@ def _interpolate(config: StringKeyDict) -> None:
 def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Config:
     kwargs = _kwargs_to_dict(kwargs)
 
-    cfg: StringKeyDict = {}
-    for build in get_config_builders():
-        build(cfg)
+    cfg: ConfigDict = {}
+    for ConfigBuilder in get_all_subclasses(BaseConfigBuilder):
+        builder: BaseConfigBuilder = ConfigBuilder()
+        cfg = builder.build(cfg)
 
     cfg = dict_deep_merge(cfg, kwargs)
     _interpolate(cfg)
