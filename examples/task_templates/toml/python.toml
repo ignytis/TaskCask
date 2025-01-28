@@ -1,0 +1,7 @@
+["example.python.taskcask.dict.dict_deep_merge"]
+kind = "python"
+module_path = "taskcask.utils.dict:dict_deep_merge"
+args = [
+    {"a" = {"b1" = "c1"}},
+    {"a" = {"b2" = "c2"}}
+]

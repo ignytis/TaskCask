@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Any, Union, Annotated
 
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, Discriminator
 
 from .task_template import BaseTaskTemplate
 from ..utils.reflection import get_all_subclasses
@@ -14,4 +14,4 @@ def _get_type_adapter() -> TypeAdapter:
     kinds = []
     for cls in get_all_subclasses(BaseTaskTemplate):
         kinds += [cls]
-    return TypeAdapter(*kinds)
+    return TypeAdapter(Annotated[Union[*kinds], Discriminator("kind")])
