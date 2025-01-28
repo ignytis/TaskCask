@@ -1,8 +1,7 @@
 import click
 
-from ...autoloader import load_plugins
-from ...config.compiler import compile_config
 from ...operations.run import run
+from ...app import app_get_config
 
 
 @click.command(name="run", help="Runs a command. Target is a task template ID and "
@@ -12,6 +11,4 @@ from ...operations.run import run
 @click.argument("target")
 @click.argument("args", nargs=-1)
 def cmd_run(target: str, params: list[str], args: list[str]) -> None:
-    load_plugins()
-    config = compile_config(params)
-    run(target, config, args)
+    run(target, app_get_config(params), args)
