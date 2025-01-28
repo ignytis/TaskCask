@@ -1,3 +1,4 @@
+import logging
 import subprocess
 
 from ...environments.environment import BaseEnvironment
@@ -15,6 +16,8 @@ class SystemCommandExecutor(BaseExecutor):
     """
     Runs a system command with provided arguments
     """
+    log = logging.getLogger(__name__)
+
     def can_execute(task: Task, env: BaseEnvironment) -> bool:
         return isinstance(task.template, SystemCommandTaskTemplate) \
             and _is_supported_env(env)
@@ -35,7 +38,11 @@ class SystemCommandExecutor(BaseExecutor):
         print(returned_value)
 
     def _run_ssh(self, task: Task, env: SshEnvironment):
-        from fabric import Connection
+        try:
+            from fabric import Connection
+        except ImportError:
+            self.log.error("Cannot import Fabric. Please install the application with 'ssh' extra")
+            return
 
         tpl: SystemCommandTaskTemplate = task.template
         cmd = tpl.cmd + task.args
@@ -44,4 +51,4 @@ class SystemCommandExecutor(BaseExecutor):
 
         with Connection(env.host, user=env.user, port=env.port) as c:
             result = c.run(command_string, hide=True, env=env_dict)
-        print(result)
+        print(result.stdout)
