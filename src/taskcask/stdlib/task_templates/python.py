@@ -7,6 +7,8 @@ class PythonTaskTemplate(BaseTaskTemplate):
     """A task template for Python script"""
     kind: Literal["python"] = "python"
     module_path: str | None = None
-    """e.g. my_module.my_sub_module:my_function"""
+    """Module path to Python callable e.g. my_lib.my_module:my_fn"""
+    file_path: str | None = None
+    """Path to Python file"""
     args: list = []
     kwargs: dict = {}

@@ -1,7 +1,15 @@
-["example.python.taskcask.dict.dict_deep_merge"]
+["example.python.module_path.stdlib.string.capwords"]
 kind = "python"
-module_path = "taskcask.utils.dict:dict_deep_merge"
+module_path = "string:capwords"
+args = ["hello world"]
+
+["example.python.file"]
+kind = "python"
+file_path = "examples/python/py_module.py:my_fn"
 args = [
+    "Hello",
+    123,
+    true,
     {"a" = {"b1" = "c1"}},
-    {"a" = {"b2" = "c2"}}
 ]
+kwargs = {"key_one"="value_one", "key_two"="value_two", "nested_dict" = {"inner_key"=123, "inner_other_key"=false} }
