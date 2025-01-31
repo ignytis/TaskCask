@@ -1,4 +1,5 @@
 from ..typedefs import StringKeyDict
+from ..utils.reflection import is_scalar
 
 
 def dict_deep_merge(*dicts: StringKeyDict) -> StringKeyDict:
@@ -23,6 +24,17 @@ def dict_deep_merge(*dicts: StringKeyDict) -> StringKeyDict:
     return result
 
 
+def dict_flatten(d: dict, parent_key=""):
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}.{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(dict_flatten(v, new_key).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
 def dict_unflatten(data: StringKeyDict):
     """
     Unflattens a dictionary:
@@ -30,10 +42,12 @@ def dict_unflatten(data: StringKeyDict):
     """
     unflattened_dict = {}
     for key, value in data.items():
+        if not is_scalar(value):
+            raise TypeError(f"Field '{key}' has non-scalar: value: '{value}'")
         sub_keys = key.split(".")
         current_dict = unflattened_dict
         for sub_key in sub_keys[:-1]:
-            if sub_key not in current_dict:
+            if sub_key not in current_dict or current_dict[sub_key] is None:
                 current_dict[sub_key] = {}
             current_dict = current_dict[sub_key]
         current_dict[sub_keys[-1]] = value

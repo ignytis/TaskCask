@@ -1,5 +1,6 @@
 import logging
 import subprocess
+from typing import Any
 
 from ...environments.environment import BaseEnvironment
 from ...executors.executor import BaseExecutor
@@ -22,27 +23,25 @@ class SystemCommandExecutor(BaseExecutor):
         return isinstance(task.template, SystemCommandTaskTemplate) \
             and _is_supported_env(env)
 
-    def execute(self, task: Task, env: BaseEnvironment):
+    def execute(self, task: Task, env: BaseEnvironment) -> Any:
         if isinstance(env, LocalEnvironment):
             return self._run_locally(task, env)
         elif isinstance(env, SshEnvironment):
             return self._run_ssh(task, env)
         else:
-            raise Exception(f"Unsupported target environment: {env.kind}")
+            raise NotImplementedError(f"Unsupported target environment: {env.kind}")
 
     def _run_locally(self, task: Task, env: LocalEnvironment):
         tpl: SystemCommandTaskTemplate = task.template
         cmd = tpl.cmd + task.args
         env_dict = {**env.env, **tpl.env}
-        returned_value = subprocess.check_output(cmd, env=env_dict).decode("utf-8")
-        print(returned_value)
+        return subprocess.check_output(cmd, env=env_dict).decode("utf-8")
 
     def _run_ssh(self, task: Task, env: SshEnvironment):
         try:
             from fabric import Connection
         except ImportError:
-            self.log.error("Cannot import Fabric. Please install the application with 'ssh' extra")
-            return
+            raise Exception("Cannot import Fabric. Please install the application with 'ssh' extra")
 
         tpl: SystemCommandTaskTemplate = task.template
         cmd = tpl.cmd + task.args
@@ -51,4 +50,4 @@ class SystemCommandExecutor(BaseExecutor):
 
         with Connection(env.host, user=env.user, port=env.port) as c:
             result = c.run(command_string, hide=True, env=env_dict)
-        print(result.stdout)
+        return result.stdout

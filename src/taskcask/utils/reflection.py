@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Any, Type
 
 
 # Credits: https://stackoverflow.com/a/17246726
@@ -12,3 +12,7 @@ def get_all_subclasses(cls) -> list[Type]:
         all_subclasses.extend(get_all_subclasses(subclass))
 
     return all_subclasses
+
+
+def is_scalar(value: Any) -> bool:
+    return isinstance(value, (int, float, str, bool)) or value is None

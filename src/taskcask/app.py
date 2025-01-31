@@ -8,4 +8,5 @@ def app_get_config(params: list[str] | None = None) -> Config:
         params = []
 
     load_plugins()
-    return compile_config(params)
+    config = compile_config(params)
+    return config

@@ -8,6 +8,9 @@ host = "raspberrypi"
 user = "pi"
 env = {"CUSTOM_PARAM" = "target_remote_env_value"}
 
+# [io]
+# print_output = false
+
 [task_template_loaders.dir_toml]
 # enabled = false
 path = "%sys.cwd%/examples/task_templates/toml"

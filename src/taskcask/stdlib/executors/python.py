@@ -2,6 +2,7 @@ import importlib
 import importlib.util
 import io
 import logging
+from typing import Any
 
 from ...environments.environment import BaseEnvironment
 from ...executors.executor import BaseExecutor
@@ -24,7 +25,7 @@ class PythonExecutor(BaseExecutor):
         return isinstance(task.template, PythonTaskTemplate) \
             and _is_supported_env(env)
 
-    def execute(self, task: Task, env: BaseEnvironment):
+    def execute(self, task: Task, env: BaseEnvironment) -> Any:
         tpl: PythonTaskTemplate = task.template
 
         # TODO: make mutually exclusive
@@ -37,18 +38,15 @@ class PythonExecutor(BaseExecutor):
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
+        output: str = None
         if isinstance(env, LocalEnvironment):
             function = getattr(module, function_name)
-            result = function(*tpl.args, **tpl.kwargs)
-
-            # TODO: parametrize
-            print(result)
+            output = function(*tpl.args, **tpl.kwargs)
         elif isinstance(env, SshEnvironment):
             try:
                 from fabric import Connection
             except ImportError:
-                self.log.error("Cannot import Fabric. Please install the application with 'ssh' extra")
-                return
+                raise Exception("Cannot import Fabric. Please install the application with 'ssh' extra")
 
             with open(module.__file__, "r") as f:
                 py_code = f.read()
@@ -57,7 +55,11 @@ class PythonExecutor(BaseExecutor):
             py_code = io.StringIO(py_code)
             with Connection(env.host, user=env.user, port=env.port) as c:
                 result = c.run("python -", hide=True, env=env.env, in_stream=py_code)
-            print(result.stdout)
+            output = result.stdout
+        else:
+            raise NotImplementedError(f"Unknown environment: {env}")
+
+        return output
 
 
 def _format_function_signature(py_args: list, py_kwargs: dict) -> str:
