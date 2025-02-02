@@ -5,10 +5,11 @@ import logging
 from typing import Any
 
 from ...environments.environment import BaseEnvironment
+from ..environments.enviromnent import LocalEnvironment, SshEnvironment
 from ...executors.executor import BaseExecutor
 from ...task import Task
 from ..task_templates.python import PythonTaskTemplate
-from ..environments.enviromnent import LocalEnvironment, SshEnvironment
+from ...utils.sys import args_to_args_and_kwargs
 
 
 def _is_supported_env(env: BaseEnvironment) -> bool:
@@ -38,10 +39,14 @@ class PythonExecutor(BaseExecutor):
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
+        (task_args, task_kwargs) = args_to_args_and_kwargs(task.args)
+        args = tpl.args + task_args
+        kwargs = {**tpl.kwargs, **task_kwargs}
+
         output: str = None
         if isinstance(env, LocalEnvironment):
             function = getattr(module, function_name)
-            output = function(*tpl.args, **tpl.kwargs)
+            output = function(*args, **kwargs)
         elif isinstance(env, SshEnvironment):
             try:
                 from fabric import Connection
@@ -50,7 +55,7 @@ class PythonExecutor(BaseExecutor):
 
             with open(module.__file__, "r") as f:
                 py_code = f.read()
-            fn_signature = _format_function_signature(tpl.args, tpl.kwargs)
+            fn_signature = _format_function_signature(args, kwargs)
             py_code += f"\n{function_name}({fn_signature})"
             py_code = io.StringIO(py_code)
             with Connection(env.host, user=env.user, port=env.port) as c:
