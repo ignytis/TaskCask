@@ -9,7 +9,7 @@ user = "pi"
 env = {"CUSTOM_PARAM" = "target_remote_env_value"}
 
 # [io]
-# print_output = false
+# print_result = false
 
 [task_template_loaders.dir_toml]
 # enabled = false

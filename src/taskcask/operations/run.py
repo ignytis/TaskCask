@@ -43,8 +43,8 @@ def run(target: str, config: Config, args: list[str]) -> None:
 
     task.execution_start = datetime.now()
     result: Any = executor.execute(task, target_env)
-    print_output = config.io.print_output if task.template.print_output is None else task.template.print_output
-    if print_output:
+    print_result = config.io.print_result if task.template.print_result is None else task.template.print_result
+    if print_result:
         print(result)
     task.execution_end = datetime.now()
     log.info("Execution started at {} and finished at {}. Time elapsed: {}"

@@ -9,7 +9,7 @@ class Io(BaseModel):
     """
     Input/output configuration
     """
-    print_output: bool = True
+    print_result: bool = True
     """If set, the executor output will be printed. This value can be overridden in task"""
 
 
