@@ -20,8 +20,9 @@ classifiers = [
 ]
 
 dependencies = [
+  "Jinja2>=3.1.5,<4.0.0",
   "pydantic>=2.10.5,<3.0.0",
-  "python-configuration>=0.12.1,<0.13.0",
+  "PyYAML>=6.0.2,<7.0.0",
 ]
 
 [project.optional-dependencies]

@@ -1,8 +1,8 @@
 from abc import ABC
 
-from ..typedefs import ConfigDict
+from ..config.types import Config
 
 
 class BaseConfigBuilder(ABC):
-    def build(self, config: ConfigDict) -> ConfigDict:
+    def build(self, config: Config) -> Config:
         raise NotImplementedError()
