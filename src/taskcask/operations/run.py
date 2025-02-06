@@ -1,6 +1,6 @@
 from datetime import datetime
 import logging
-from typing import Any, Type
+from typing import Any
 
 from ..config.types import Config
 from ..environments.environment import BaseEnvironment
@@ -64,7 +64,7 @@ def _get_task_template(config: Config, task_template_id: str) -> BaseTaskTemplat
 
 
 def _get_executor(task: Task, env: BaseEnvironment) -> BaseExecutor:
-    executor: Type[BaseExecutor] | None = None
+    executor: BaseExecutor | None = None
     for executor_cls in get_all_subclasses(BaseExecutor):
         if executor_cls.can_execute(task, env):
             executor = executor_cls()
@@ -82,9 +82,9 @@ def _get_target_env(config: Config, target_env: str | None = None) -> BaseEnviro
 
     env = config.environments.get(target_env)
     if env is None:
-        if "local" == target_env:
-            env = {"kind": "local"}
-        else:
+        if "local" != target_env:
             raise ValueError(f"Environment '{target_env}' not found in configuration.")
+        # Instead of requiring the local config in config, create a basic local env
+        env = {"kind": "local"}
 
     return BaseEnvironment.create_from_dict(env)
