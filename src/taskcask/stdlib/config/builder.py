@@ -1,6 +1,6 @@
 import logging
 import os
-# import re
+import re
 
 import jinja2
 import yaml
@@ -8,10 +8,11 @@ import yaml
 from ...typedefs import StringKeyDict
 from ...config.builder import BaseConfigBuilder
 from ...config.types import Config
-from ...utils.dict import dict_deep_merge
+from ...utils.dict import dict_deep_merge, dict_unflatten
 
 
-# RE_UNDERSCORE = re.compile(r"_{2,}")
+CFG_ENV_PREFIX = "TASKCASK__"
+RE_UNDERSCORE = re.compile(r"_{2,}")
 
 
 class ConfigBuilder(BaseConfigBuilder):
@@ -43,20 +44,44 @@ class ConfigBuilder(BaseConfigBuilder):
             config = Config.model_validate(config)
 
             # Add next templates to load if any
-            taskcask_directives: StringKeyDict | None = cfg_iter.get("_taskcask_directives")
+            taskcask_directives: StringKeyDict | None = cfg_iter.get("@taskcask")
             if taskcask_directives is not None:
                 # Consider path to current config
                 new_cfg_paths = [os.path.realpath(os.path.join(cfg_dir, p))
                                  for p in taskcask_directives.get("load_next", [])]
                 cfg_paths += new_cfg_paths
-                del cfg_iter["_taskcask_directives"]
+                del cfg_iter["@taskcask"]
 
-        # # TODO:
-        # Also consider CLI/dictionary params
-        # cfg_env = {_format_env_key(k): v for k, v in os.environ.items() if k.startswith("TASKCASK__")}
+        cfg_env = {_format_env_key(k): v for k, v in os.environ.items() if k.startswith(CFG_ENV_PREFIX)}
+        cfg_overrides = {**cfg_env, **self.kwargs}
+        cfg_overrides = {k: _format_config_value(v) for k, v in cfg_overrides.items()}
+        cfg_overrides = dict_unflatten(cfg_overrides)
+        config = dict_deep_merge(config.model_dump(), cfg_overrides)
+        config = Config.model_validate(config)
 
         return config
 
 
-# def _format_env_key(key: str) -> str:
-#     return key.lower().replace(RE_UNDERSCORE, ".")
+def _format_env_key(key: str) -> str:
+    return RE_UNDERSCORE.sub(".", key.removeprefix(CFG_ENV_PREFIX).lower())
+
+
+def _format_config_value(value: str) -> str | float | int | bool:
+    # Try converting to integer
+    if value.isdigit() or (value.startswith("-") and value[1:].isdigit()):
+        return int(value)
+
+    # Try converting to float
+    try:
+        float_value = float(value)
+        return float_value
+    except ValueError:
+        pass
+
+    # Try converting to boolean
+    lowered = value.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
+
+    # Keep as string
+    return value

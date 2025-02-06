@@ -82,6 +82,9 @@ def _get_target_env(config: Config, target_env: str | None = None) -> BaseEnviro
 
     env = config.environments.get(target_env)
     if env is None:
-        raise ValueError(f"Environment '{target_env}' not found in configuration.")
+        if "local" == target_env:
+            env = {"kind": "local"}
+        else:
+            raise ValueError(f"Environment '{target_env}' not found in configuration.")
 
     return BaseEnvironment.create_from_dict(env)

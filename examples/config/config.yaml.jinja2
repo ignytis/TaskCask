@@ -4,6 +4,7 @@ parameters:
     name: "{{ deployment_name }}"
     dns: "{{ deployment_name }}.example.local"
 
-_taskcask_directives:
+"@taskcask":
   load_next:
   - config.main.yaml.jinja2
+  - environments/ssh_raspberrypi.jinja2

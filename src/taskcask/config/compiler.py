@@ -39,7 +39,7 @@ def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Confi
 
     cfg = Config()
     for ConfigBuilder in get_all_subclasses(BaseConfigBuilder):
-        builder: BaseConfigBuilder = ConfigBuilder()
+        builder: BaseConfigBuilder = ConfigBuilder(kwargs)
         cfg = builder.build(cfg)
 
     return cfg
