@@ -8,6 +8,9 @@ environments:
     kind: local
     env:
       CUSTOM_PARAM: target_local_env_value
+  {% filter indent(2) %}
+  {%- include "environments/ssh_raspberrypi.yaml.jinja2" -%}
+  {% endfilter %}
 
 # io:
 #   print_result: false
