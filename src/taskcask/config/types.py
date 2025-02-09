@@ -40,8 +40,8 @@ class Config(BaseModel):
     """Execution environments setup"""
     task_template_loaders: dict[str, dict] = {}
     """Task template loader configuration. Key is loader ID, value is config"""
-    parameters: StringKeyDict = {}
-    """User-defined values"""
+    params: StringKeyDict = {}
+    """User-defined parameters"""
 
     @model_validator(mode="before")
     def validate_io(cls, values: dict):

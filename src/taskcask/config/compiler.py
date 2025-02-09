@@ -36,7 +36,8 @@ def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Confi
         jinja_env = jinja2.Environment(undefined=jinja2.StrictUndefined, loader=jinja2.FileSystemLoader(cfg_dir))
 
         tpl = jinja_env.get_template(cfg_filename)
-        cfg_iter: StringKeyDict = yaml.load(tpl.render({"cfg": config}), Loader=yaml.FullLoader)
+        cfg_iter: StringKeyDict = yaml.load(tpl.render({"cfg": config, "params": config.params}),
+                                            Loader=yaml.FullLoader)
 
         config = dict_deep_merge(config.model_dump(), cfg_iter)
         config = Config.model_validate(config)
