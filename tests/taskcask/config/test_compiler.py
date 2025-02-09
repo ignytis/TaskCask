@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import TestCase
 from unittest.mock import patch, mock_open
 
@@ -43,6 +44,9 @@ CONFIG_COMPILED_SIMPLE = {
     "task_template_loaders": {},
 }
 
+ENV_VARS = [("TASKCASK__PARAMS__ENV_VAR_ONE", "env_var1"),
+            ("TASKCASK__PARAMS__ENV_VAR_OVERRIDE", "to_be_overridden")]
+
 
 @patch("pathlib.Path.cwd", return_value="/test/cwd")
 @patch("pathlib.Path.home", return_value="/test/home")
@@ -56,6 +60,19 @@ class CompilerTest(TestCase):
     @patch("builtins.open", new_callable=mock_open, read_data=FILE_CONFIG_CONTENTS_SIMPLE)
     def test_compile_simple(self, _a, _b, _c, _d, _e) -> None:
         self.assertDictEqual(CONFIG_COMPILED_SIMPLE, compile_config().model_dump())
+
+    @patch("builtins.open", new_callable=mock_open, read_data=FILE_CONFIG_CONTENTS_SIMPLE)
+    @patch("os.environ.items", return_value=ENV_VARS)
+    def test_compile_simple_override(self, _a, _b, _c, _d, _e, _f) -> None:
+        cfg_compiled = deepcopy(CONFIG_COMPILED_SIMPLE)
+        cfg_compiled["params"] = {
+            **cfg_compiled["params"],
+            "some_param": "some_param_val1",
+            "env_var_one": "env_var1",
+            "env_var_override": "some_param_val2",
+        }
+        self.assertDictEqual(cfg_compiled, compile_config(["params.some_param=some_param_val1",
+                                                           "params.env_var_override=some_param_val2"]).model_dump())
 
     @patch("builtins.open", new_callable=mock_open, read_data=FILE_CONFIG_CONTENTS_COMPOSITE_FIRST)
     def test_compile_composite(self, mock_file, _b, _c, _d, _e) -> None:
