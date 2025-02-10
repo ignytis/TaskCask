@@ -1,0 +1,9 @@
+{% set deployment_name = "demo" %}
+params:
+  deployment:
+    name: "{{ deployment_name }}"
+    dns: "{{ deployment_name }}.example.local"
+
+"@taskcask":
+  load_next:
+  - config.main.yaml.jinja2

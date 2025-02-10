@@ -1,17 +1,65 @@
 import logging
+import os
 import re
 from typing import Sequence
 
-from .builder import BaseConfigBuilder
-from ..typedefs import ConfigDict, StringKeyDict, StringKvDict
+import jinja2
+import yaml
+
+from ..typedefs import StringKeyDict
 from .types import Config
-from ..utils.algorithms.sort import sort_topological, CircularReferenceException
 from ..utils.dict import dict_deep_merge, dict_unflatten
-from ..utils.reflection import get_all_subclasses
 
 log = logging.getLogger(__name__)
 
-RE_PLACEHOLDER = re.compile(r"%([a-zA-Z_0-9._-]+)%")
+CFG_ENV_PREFIX = "TASKCASK__"
+RE_UNDERSCORE = re.compile(r"_{2,}")
+
+
+def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Config:
+    """
+    Compiles the configuration from *.yaml.jinja2 files
+    """
+    config = Config()
+    cfg_paths = os.getenv("TASKCASK_CONFIG", os.path.join(config.sys.home, ".taskcask", "config.toml.jinja2")) \
+        .split(os.pathsep)
+    loaded_cfg_paths = []  # protection against recursion
+
+    while len(cfg_paths) > 0:
+        cfg_path = os.path.realpath(cfg_paths.pop(0))
+        if cfg_path in loaded_cfg_paths:
+            raise Exception(f"Attempting to load the path '{cfg_path}' multiple times")
+        loaded_cfg_paths.append(cfg_path)
+        cfg_filename = os.path.basename(cfg_path)
+        cfg_dir = os.path.dirname(cfg_path)
+        cfg_path = None
+        # TODO: make common base environment with task templates
+        jinja_env = jinja2.Environment(undefined=jinja2.StrictUndefined, loader=jinja2.FileSystemLoader(cfg_dir))
+
+        tpl = jinja_env.get_template(cfg_filename)
+        cfg_iter: StringKeyDict = yaml.load(tpl.render({"cfg": config, "params": config.params}),
+                                            Loader=yaml.FullLoader)
+
+        config = dict_deep_merge(config.model_dump(), cfg_iter)
+        config = Config.model_validate(config)
+
+        # Add next templates to load if any
+        taskcask_directives: StringKeyDict | None = cfg_iter.get("@taskcask")
+        if taskcask_directives is not None:
+            # Consider path to current config
+            new_cfg_paths = [os.path.realpath(os.path.join(cfg_dir, p))
+                             for p in taskcask_directives.get("load_next", [])]
+            cfg_paths += new_cfg_paths
+            del cfg_iter["@taskcask"]
+
+    cfg_env = {_format_env_key(k): v for k, v in os.environ.items() if k.startswith(CFG_ENV_PREFIX)}
+    cfg_overrides = {**cfg_env, **_kwargs_to_dict(kwargs)}
+    cfg_overrides = {k: _format_config_value(v) for k, v in cfg_overrides.items()}
+    cfg_overrides = dict_unflatten(cfg_overrides)
+    config = dict_deep_merge(config.model_dump(), cfg_overrides)
+    config = Config.model_validate(config)
+
+    return config
 
 
 def _kwargs_to_dict(kwargs: StringKeyDict | Sequence[str] | None = None) -> StringKeyDict:
@@ -36,86 +84,26 @@ def _kwargs_to_dict(kwargs: StringKeyDict | Sequence[str] | None = None) -> Stri
     return kwargs
 
 
-def _unescape(input_data):
-    """
-    Replaces the '%%' with '%'
-    The percentage symbol escapes %some_variable% tokens.
-    """
-    # config = {k: v.replace("%%", "%") for k, v in config.items()}
-    if isinstance(input_data, str):
-        return input_data.replace("%%", "%")
-    elif isinstance(input_data, list):
-        return [_unescape(item) for item in input_data]
-    elif isinstance(input_data, dict):
-        return {key: _unescape(value) for key, value in input_data.items()}
-    else:
-        return input_data
+def _format_env_key(key: str) -> str:
+    return RE_UNDERSCORE.sub(".", key.removeprefix(CFG_ENV_PREFIX).lower())
 
 
-def _render_value(value: str, replacements: StringKeyDict) -> str:
-    """
-    Replace placeholders (%abc%) with values.
-    Skip the escaped values (%%abc%%)
-    """
-    # -1 because non-inclusive end()
-    idxs: list[int] = [m.span() for m in RE_PLACEHOLDER.finditer(value)]
-    # Check occurrences in reverse order: this way updates in string will not affect the
-    # previously located indexes
-    idxs.reverse()
-    for idx_start, idx_end_noninclusive in idxs:
-        idx_end = idx_end_noninclusive - 1
-        idx_last_char = len(value) - 1
-        char_before = None if idx_start == 0 else value[idx_start-1]
-        char_after = None if idx_end == idx_last_char else value[idx_end+1]
-        # Escape sequence found: no action.
-        # Unescape will occur on later stage when all references are resolved.
-        if "%" == char_before and "%" == char_after:
-            continue
+def _format_config_value(value: str) -> str | float | int | bool:
+    # Try converting to integer
+    if value.isdigit() or (value.startswith("-") and value[1:].isdigit()):
+        return int(value)
 
-        # No escape sequence found: replace the value
-        replacement_key = value[idx_start+1:idx_end]
-        if replacement_key not in replacements:
-            raise ValueError(f"Key '{replacement_key}' not found")
-        replace_with = replacements[replacement_key]
-        value = value[:idx_start] + replace_with + value[idx_end+1:]
-
-    return value
-
-
-def _interpolate(config: ConfigDict) -> None:
-    # Dependency tree: parents depend on children
-    dep_kv: StringKvDict = {}
-    for parent, v in config.items():
-        if not isinstance(v, str):
-            continue
-        children = RE_PLACEHOLDER.findall(v)
-        dep_kv[parent] = children
-
+    # Try converting to float
     try:
-        sorted_cfg_keys = sort_topological(dep_kv)
-    except CircularReferenceException as e:
-        stack = " -> ".join(e.stack)
-        raise ValueError(f"A circular reference detected: {stack}")
-    for cfg_key in sorted_cfg_keys:
-        children_keys = dep_kv[cfg_key]
-        missing_keys = children_keys - config.keys()
-        if len(missing_keys) > 0:
-            raise ValueError(f'Keys not found in config: {", ".join(missing_keys)}')
-        # Key: placeholder key, value: value to replace with
-        children_replacements = {child_key: config[child_key] for child_key in children_keys}
-        config[cfg_key] = _render_value(config[cfg_key], children_replacements)
+        float_value = float(value)
+        return float_value
+    except ValueError:
+        pass
 
+    # Try converting to boolean
+    lowered = value.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
 
-def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Config:
-    kwargs = _kwargs_to_dict(kwargs)
-
-    cfg: ConfigDict = {}
-    for ConfigBuilder in get_all_subclasses(BaseConfigBuilder):
-        builder: BaseConfigBuilder = ConfigBuilder()
-        cfg = builder.build(cfg)
-
-    cfg = dict_deep_merge(cfg, kwargs)
-    _interpolate(cfg)
-    cfg = _unescape(cfg)
-
-    return Config.model_validate(dict_unflatten(cfg))
+    # Keep as string
+    return value

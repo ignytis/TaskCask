@@ -1,143 +1,100 @@
+from copy import deepcopy
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, mock_open
+
+from taskcask.config.compiler import compile_config
+
+FILE_CONFIG_CONTENTS_SIMPLE = """\
+{% set name = "John" %}
+params:
+  user_name: {{ name }}
+  greeting: "Hello, {{ name }}!"
+"""
+
+FILE_CONFIG_CONTENTS_COMPOSITE_FIRST = """\
+{% set name = "John" %}
+params:
+  user_name: {{ name }}
+  greeting: "Hello, {{ name }}!"
+
+"@taskcask":
+  load_next:
+  - another_config.yaml.jinja2
+"""
+
+FILE_CONFIG_CONTENTS_COMPOSITE_SECOND = """\
+task_templates:
+  lookup_dirs:
+  - /home/{{ params.user_name | lower }}
+"""
+
+CONFIG_COMPILED_SIMPLE = {
+    "environments": {},
+    "io": {
+        "print_result": True,
+    },
+    "params": {
+        "user_name": "John",
+        "greeting": "Hello, John!",
+    },
+    "sys": {
+        "cwd": "/test/cwd",
+        "home": "/test/home",
+    },
+    "task_templates": {
+        "lookup_dirs": []
+    },
+}
+
+ENV_VARS = [("TASKCASK__PARAMS__ENV_VAR_ONE", "env_var1"),
+            ("TASKCASK__PARAMS__ENV_VAR_OVERRIDE", "to_be_overridden")]
 
 
-with patch("taskcask.utils.reflection.get_all_subclasses") as get_config_builders:
-    mock_builder = MagicMock()
-    mock_builder.build.return_value = {
-        "misc.val_from_builder": "builder_value",
-        "misc.val_from_builder_override": "override_me",
-        "sys.cwd": "/path/one",
-        "sys.home": "/path/two",
-        "task_template_loaders.sample_loader.loader_param": "hello",
-    }
-
-    mock_builder_class = MagicMock()
-    mock_builder_class.return_value = mock_builder
-    get_config_builders.return_value = [mock_builder_class]
-
-    from taskcask.config import compiler
-
-
+@patch("pathlib.Path.cwd", return_value="/test/cwd")
+@patch("pathlib.Path.home", return_value="/test/home")
+@patch("os.path.isfile", return_value=True)
+@patch("os.path.getmtime", return_value=123)
 class CompilerTest(TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.maxDiff = None
 
-    def test_builder_simple(self):
-        """
-        A simple override and interpolation
-        """
-        cfg = compiler.compile_config({
-            "misc.sample_key": "sample_value",
-            "misc.val_from_builder_override": "overridden",
-            "misc.val_interpolate": "test %misc.val_from_builder_override%",
-        })
+    @patch("builtins.open", new_callable=mock_open, read_data=FILE_CONFIG_CONTENTS_SIMPLE)
+    def test_compile_simple(self, _a, _b, _c, _d, _e) -> None:
+        self.assertDictEqual(CONFIG_COMPILED_SIMPLE, compile_config().model_dump())
+
+    @patch("builtins.open", new_callable=mock_open, read_data=FILE_CONFIG_CONTENTS_SIMPLE)
+    @patch("os.environ.items", return_value=ENV_VARS)
+    def test_compile_simple_override(self, _a, _b, _c, _d, _e, _f) -> None:
+        cfg_compiled = deepcopy(CONFIG_COMPILED_SIMPLE)
+        cfg_compiled["params"] = {
+            **cfg_compiled["params"],
+            "some_param": "some_param_val1",
+            "env_var_one": "env_var1",
+            "env_var_override": "some_param_val2",
+        }
+        self.assertDictEqual(cfg_compiled, compile_config(["params.some_param=some_param_val1",
+                                                           "params.env_var_override=some_param_val2"]).model_dump())
+
+    @patch("builtins.open", new_callable=mock_open, read_data=FILE_CONFIG_CONTENTS_COMPOSITE_FIRST)
+    def test_compile_composite(self, mock_file, _b, _c, _d, _e) -> None:
+        handlers = (mock_file.return_value, mock_open(read_data=FILE_CONFIG_CONTENTS_COMPOSITE_SECOND).return_value)
+        mock_file.side_effect = handlers
 
         self.assertDictEqual({
-            "environments": {},
-            "io": {"print_result": True},
-            "misc": {
-                "sample_key": "sample_value",
-                "val_from_builder": "builder_value",
-                "val_from_builder_override": "overridden",
-                "val_interpolate": "test overridden",
+            "io": {
+                "print_result": True,
             },
             "sys": {
-                "cwd": "/path/one",
-                "home": "/path/two",
+                "cwd": "/test/cwd",
+                "home": "/test/home",
             },
-            "task_template_loaders": {
-                "sample_loader": {
-                    "loader_param": "hello"
-                }
-            },
-        }, cfg.model_dump())
-
-    def test_simple_error_val_not_found(self):
-        """
-        A missing value
-        """
-        with self.assertRaisesRegex(ValueError, "Keys not found in config: sample_missing_value"):
-            compiler.compile_config({
-                "misc.sample_key": "sample_value",
-                "misc.sample_key_2": r"test %sample_missing_value%",
-            })
-
-    def test_builder_escaped_val(self):
-        """
-        Escaped percentage charactef
-        """
-        cfg = compiler.compile_config({
-            "misc.sample_key": "sample_value",
-            "misc.val_from_builder_override": "overridden",
-            "misc.val_do_not_interpolate": r"test %%misc.val_from_builder_override%%",
-        })
-
-        self.assertDictEqual({
             "environments": {},
-            "io": {"print_result": True},
-            "misc": {
-                "sample_key": "sample_value",
-                "val_from_builder": "builder_value",
-                "val_from_builder_override": "overridden",
-                "val_do_not_interpolate": "test %misc.val_from_builder_override%",
+            "params": {
+                "user_name": "John",
+                "greeting": "Hello, John!",
             },
-            "sys": {
-                "cwd": "/path/one",
-                "home": "/path/two",
+            "task_templates": {
+                "lookup_dirs": ["/home/john"]
             },
-            "task_template_loaders": {
-                "sample_loader": {
-                    "loader_param": "hello"
-                }
-            },
-        }, cfg.model_dump())
-
-    def test_recusive_valid(self):
-        """
-        A recursive interpolation
-        """
-        cfg = compiler.compile_config({
-            "misc.sample_key": "sample_value",
-            "misc.recursion_level_1": "abc",
-            "misc.recursion_level_3": "Level 2: %task_template_loaders.sample_loader.recursion_level_2%",
-            "task_template_loaders.sample_loader.recursion_level_2": "Level 1: %misc.recursion_level_1%",
-        })
-
-        self.assertDictEqual({
-            "environments": {},
-            "io": {"print_result": True},
-            "misc": {
-                "sample_key": "sample_value",
-                "val_from_builder": "builder_value",
-                "val_from_builder_override": "override_me",
-                "recursion_level_1": "abc",
-                "recursion_level_3": "Level 2: Level 1: abc",
-            },
-            "sys": {
-                "cwd": "/path/one",
-                "home": "/path/two",
-            },
-            "task_template_loaders": {
-                "sample_loader": {
-                    "loader_param": "hello",
-                    "recursion_level_2": "Level 1: abc",
-                }
-            },
-        }, cfg.model_dump())
-
-    def test_recusive_error_circular_reference(self):
-        """
-        A recursive interpolation with circilar reference
-        """
-        with self.assertRaisesRegex(
-                ValueError,
-                "A circular reference detected: misc.recursion_level_1 -> misc.recursion_level_3 -> "
-                "task_template_loaders.sample_loader.recursion_level_2 -> misc.recursion_level_1"):
-            compiler.compile_config({
-                "misc.sample_key": "sample_value",
-                "misc.recursion_level_1": "abc %misc.recursion_level_3%",
-                "misc.recursion_level_3": "Level 2: %task_template_loaders.sample_loader.recursion_level_2%",
-                "task_template_loaders.sample_loader.recursion_level_2": "Level 1: %misc.recursion_level_1%",
-            })
+        }, compile_config().model_dump())
