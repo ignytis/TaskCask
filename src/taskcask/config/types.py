@@ -32,16 +32,21 @@ class SysConfig(BaseModel):
         return values
 
 
+class TaskTemplateConfig(BaseModel):
+    lookup_dirs: list[str] = []
+
+
 class Config(BaseModel):
     sys: SysConfig | None = None
     """System configuration"""
     environments: dict[str, StringKeyDict] = {}
-    io: Io
     """Execution environments setup"""
-    task_template_loaders: dict[str, dict] = {}
-    """Task template loader configuration. Key is loader ID, value is config"""
+    io: Io
+    """Input / output"""
     params: StringKeyDict = {}
     """User-defined parameters"""
+    task_templates: TaskTemplateConfig
+    """Task template config"""
 
     @model_validator(mode="before")
     def validate_io(cls, values: dict):
@@ -49,6 +54,8 @@ class Config(BaseModel):
             values["io"] = Io()
         if not isinstance(values.get("io"), dict):
             values["sys"] = SysConfig()
+        if not isinstance(values.get("task_templates"), dict):
+            values["task_templates"] = TaskTemplateConfig()
         return values
 
 

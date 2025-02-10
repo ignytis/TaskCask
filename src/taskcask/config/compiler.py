@@ -33,6 +33,7 @@ def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Confi
         cfg_filename = os.path.basename(cfg_path)
         cfg_dir = os.path.dirname(cfg_path)
         cfg_path = None
+        # TODO: make common base environment with task templates
         jinja_env = jinja2.Environment(undefined=jinja2.StrictUndefined, loader=jinja2.FileSystemLoader(cfg_dir))
 
         tpl = jinja_env.get_template(cfg_filename)

@@ -23,25 +23,27 @@ params:
 """
 
 FILE_CONFIG_CONTENTS_COMPOSITE_SECOND = """\
-task_template_loaders:
-  sample_loader:
-    path: /home/{{ params.user_name | lower }}
+task_templates:
+  lookup_dirs:
+  - /home/{{ params.user_name | lower }}
 """
 
 CONFIG_COMPILED_SIMPLE = {
+    "environments": {},
     "io": {
         "print_result": True,
+    },
+    "params": {
+        "user_name": "John",
+        "greeting": "Hello, John!",
     },
     "sys": {
         "cwd": "/test/cwd",
         "home": "/test/home",
     },
-    "environments": {},
-    "params": {
-        "user_name": "John",
-        "greeting": "Hello, John!",
+    "task_templates": {
+        "lookup_dirs": []
     },
-    "task_template_loaders": {},
 }
 
 ENV_VARS = [("TASKCASK__PARAMS__ENV_VAR_ONE", "env_var1"),
@@ -92,9 +94,7 @@ class CompilerTest(TestCase):
                 "user_name": "John",
                 "greeting": "Hello, John!",
             },
-            "task_template_loaders": {
-               "sample_loader": {
-                  "path": "/home/john"
-               }
+            "task_templates": {
+                "lookup_dirs": ["/home/john"]
             },
         }, compile_config().model_dump())

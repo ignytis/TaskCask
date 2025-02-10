@@ -1,6 +1,11 @@
 from datetime import datetime
 import logging
-from typing import Any
+import os.path
+from pathlib import Path
+from typing import Any, Generator
+
+import jinja2
+import yaml
 
 from ..config.types import Config
 from ..environments.environment import BaseEnvironment
@@ -8,7 +13,6 @@ from ..executors.executor import BaseExecutor
 from ..task import Task
 from ..task_templates.task_template import BaseTaskTemplate
 from ..task_templates.factory import get_task_template_from_dict
-from ..task_templates.definitions.factory import get_task_template_definitions
 from ..typedefs import TaskTemplateDefinition
 from ..utils.reflection import get_all_subclasses
 
@@ -53,7 +57,7 @@ def run(target: str, config: Config, args: list[str]) -> None:
 
 def _get_task_template(config: Config, task_template_id: str) -> BaseTaskTemplate:
     task_tpl_def: TaskTemplateDefinition | None = None
-    for _task_tpl_defs in get_task_template_definitions(config):
+    for _task_tpl_defs in _get_task_template_definitions(config):
         if task_template_id in _task_tpl_defs:
             task_tpl_def = _task_tpl_defs[task_template_id]
             break
@@ -88,3 +92,18 @@ def _get_target_env(config: Config, target_env: str | None = None) -> BaseEnviro
         env = {"kind": "local"}
 
     return BaseEnvironment.create_from_dict(env)
+
+
+def _get_task_template_definitions(config: Config) -> Generator[dict[str, TaskTemplateDefinition], None, None]:
+    """
+    Generates the dictionaries of task template definitions (which are dicrionaties of task template attributes).
+    Keys are task template identifiers.
+    """
+    for loader_cfg_path in config.task_templates.lookup_dirs:
+        for task_def_tpl_path in Path(loader_cfg_path).rglob("*.yaml.jinja2"):
+            cfg_dir = os.path.dirname(task_def_tpl_path)
+            task_def_tpl_filename = os.path.basename(task_def_tpl_path)
+            # TODO: make common base environment with task templates
+            jinja_env = jinja2.Environment(undefined=jinja2.StrictUndefined, loader=jinja2.FileSystemLoader(cfg_dir))
+            tpl = jinja_env.get_template(task_def_tpl_filename)
+            yield yaml.load(tpl.render({"cfg": config, "params": config.params}), Loader=yaml.FullLoader)
