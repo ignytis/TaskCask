@@ -8,9 +8,16 @@ environments:
     kind: local
     env:
       CUSTOM_PARAM: target_local_env_value
+      ENV: "local"
   {% filter indent(2) %}
   {%- include "environments/ssh_raspberrypi.yaml.jinja2" -%}
   {% endfilter %}
+  docker:
+    kind: docker
+    image: alpine
+    env:
+      CUSTOM_PARAM: docker_custom_params
+      ENV: "docker"
 
 # io:
 #   print_result: false
