@@ -13,6 +13,24 @@ class DictMergeTest(TestCase):
             {"a": 1, "b": {"x": 10, "y": 50, "z": 40}, "c": 3, "d": 4},
             dict_deep_merge(dict1, dict2, dict3))
 
+    def test_int_list_str_vs_dict(self) -> None:
+        dict1 = {"a": 1, "b": "abc"}
+        dict2 = {"b": {"y": 30, "z": 40}, "c": 3}
+        dict3 = {"d": 4, "b": {"y": 50}}
+
+        self.assertDictEqual(
+            {"a": 1, "b": {"y": 50, "z": 40}, "c": 3, "d": 4},
+            dict_deep_merge(dict1, dict2, dict3))
+
+    def test_int_list_dict_vs_str(self) -> None:
+        dict1 = {"a": 1, "b": {"x": 10, "y": 20}}
+        dict2 = {"b": {"y": 30, "z": 40}, "c": 3}
+        dict3 = {"d": 4, "b": "abc"}
+
+        self.assertDictEqual(
+            {"a": 1, "b": "abc", "c": 3, "d": 4},
+            dict_deep_merge(dict1, dict2, dict3))
+
 
 class DictUnflattenTest(TestCase):
     def test_unflatten(self) -> None:
