@@ -3,6 +3,13 @@ example.system_commands.say_hello_world:
   kind: system_command
   cmd: ["echo", "Hello, World!"]
 
+{# An example of dynamic task generation. This creates tasks 'example.system_commands.task_one' and 'example.system_commands.task_two' #}
+{% for x in ['task_one', 'task_two'] %}
+example.system_commands.{{ x }}:
+  kind: system_command
+  cmd: ["echo", "Hello, World! The param is {{ x }}"]
+{% endfor %}
+
 
 # Text and current time (Unix)
 example.system_commands.say_hello_world.with_env:
