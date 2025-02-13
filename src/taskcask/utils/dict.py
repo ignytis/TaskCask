@@ -50,5 +50,8 @@ def dict_unflatten(data: StringKeyDict):
             if sub_key not in current_dict or current_dict[sub_key] is None:
                 current_dict[sub_key] = {}
             current_dict = current_dict[sub_key]
+        if not isinstance(current_dict, dict):
+            raise ValueError(f"Attempting to assign a value '{value}' with key '{sub_keys[-1]}'"
+                             f" to  non-dictionary '{current_dict}'")
         current_dict[sub_keys[-1]] = value
     return unflattened_dict

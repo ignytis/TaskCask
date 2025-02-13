@@ -20,3 +20,9 @@ class DictUnflattenTest(TestCase):
             {"a": "one", "b": {"c": {"d": "two", "e": False}, "f": 4}},
             dict_unflatten({"a": "one", "b.c.d": "two", "b.c.e": False, "b.f": 4}),
         )
+
+    def test_unflatten_invalid_assign_value_to_non_dictionary(self) -> None:
+        with self.assertRaisesRegex(
+                ValueError,
+                "Attempting to assign a value 'two' with key 'b' to  non-dictionary 'one'"):
+            dict_unflatten({"a": "one", "a.b": "two"})
