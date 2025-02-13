@@ -6,7 +6,7 @@ from typing import Sequence
 import jinja2
 import yaml
 
-from ..typedefs import StringKeyDict
+from ..typedefs import StringKeyDict, StringKvDict
 from .types import Config
 from ..utils.dict import dict_deep_merge, dict_unflatten
 
@@ -16,7 +16,7 @@ CFG_ENV_PREFIX = "TASKCASK__"
 RE_UNDERSCORE = re.compile(r"_{2,}")
 
 
-def compile_config(kwargs: StringKeyDict | Sequence[str] | None = None) -> Config:
+def compile_config(kwargs: StringKvDict | Sequence[str] | None = None) -> Config:
     """
     Compiles the configuration from *.yaml.jinja2 files
     """
@@ -85,10 +85,24 @@ def _kwargs_to_dict(kwargs: StringKeyDict | Sequence[str] | None = None) -> Stri
 
 
 def _format_env_key(key: str) -> str:
+    """
+    Example: TASKCASK__SOME__MY_VAR -> some.my_var
+    """
     return RE_UNDERSCORE.sub(".", key.removeprefix(CFG_ENV_PREFIX).lower())
 
 
-def _format_config_value(value: str) -> str | float | int | bool:
+def _format_config_value(orig_value: str) -> str | float | int | bool:
+    """
+    Replace the string value with more suitable type
+    """
+    is_quoted = orig_value.startswith('"') and orig_value.endswith('"')
+    value = orig_value[1:-1] if is_quoted else orig_value
+
+    # If value is a quoted string e.g. "false" -> return unquoted string,
+    # but do NOT convert the type
+    if is_quoted:
+        return value
+
     # Try converting to integer
     if value.isdigit() or (value.startswith("-") and value[1:].isdigit()):
         return int(value)

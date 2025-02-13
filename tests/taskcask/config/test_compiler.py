@@ -2,7 +2,7 @@ from copy import deepcopy
 from unittest import TestCase
 from unittest.mock import patch, mock_open
 
-from taskcask.config.compiler import compile_config
+from taskcask.config.compiler import compile_config, _format_config_value, _format_env_key
 
 FILE_CONFIG_CONTENTS_SIMPLE = """\
 {% set name = "John" %}
@@ -98,3 +98,22 @@ class CompilerTest(TestCase):
                 "lookup_dirs": ["/home/john"]
             },
         }, compile_config().model_dump())
+
+
+class TestConfigFormatting(TestCase):
+    def test_format_env_key(self):
+        self.assertEqual(_format_env_key("TASKCASK__SOME__MY_VAR"), "some.my_var")
+        self.assertEqual(_format_env_key("TASKCASK__ANOTHER_VAR"), "another_var")
+        self.assertEqual(_format_env_key("TASKCASK__VAR"), "var")
+
+    def test_format_config_value(self):
+        self.assertEqual(_format_config_value("123"), 123)
+        self.assertEqual(_format_config_value("-456"), -456)
+        self.assertEqual(_format_config_value("3.14"), 3.14)
+        self.assertEqual(_format_config_value('"3.14"'), "3.14")
+        self.assertEqual(_format_config_value("-2.71"), -2.71)
+        self.assertEqual(_format_config_value("true"), True)
+        self.assertEqual(_format_config_value("false"), False)
+        self.assertEqual(_format_config_value('"false"'), "false")
+        self.assertEqual(_format_config_value("SomeText"), "SomeText")
+        self.assertEqual(_format_config_value("123abc"), "123abc")
