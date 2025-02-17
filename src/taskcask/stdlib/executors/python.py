@@ -29,11 +29,10 @@ class PythonExecutor(BaseExecutor):
     def execute(self, task: Task, env: BaseEnvironment) -> Any:
         tpl: PythonTaskTemplate = task.template
 
-        # TODO: make mutually exclusive
         if tpl.module_path is not None:
             module_path, function_name = tpl.module_path.rsplit(":", 1)
             module = importlib.import_module(module_path)
-        elif tpl.file_path:
+        elif tpl.file_path is not None:
             module_path, function_name = tpl.file_path.rsplit(":", 1)
             spec = importlib.util.spec_from_file_location("my_module", module_path)
             module = importlib.util.module_from_spec(spec)

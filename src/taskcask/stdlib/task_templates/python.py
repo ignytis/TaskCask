@@ -1,4 +1,6 @@
-from typing import Literal
+from typing import Literal, Self
+
+from pydantic import model_validator
 
 from ...task_templates.task_template import BaseTaskTemplate
 
@@ -14,3 +16,9 @@ class PythonTaskTemplate(BaseTaskTemplate):
 
     args: list = []
     kwargs: dict = {}
+
+    @model_validator(mode="after")
+    def path_xor(self) -> Self:
+        if bool(self.module_path) == bool(self.file_path):
+            raise ValueError("Exactly one parameter must be specified: either file_path or module path")
+        return self
