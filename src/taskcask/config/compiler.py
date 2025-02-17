@@ -3,12 +3,12 @@ import os
 import re
 from typing import Sequence
 
-import jinja2
 import yaml
 
 from ..typedefs import StringKeyDict, StringKvDict
 from .types import Config
 from ..utils.dict import dict_deep_merge, dict_unflatten
+from ..utils.jinja import jinja_render_from_file
 
 log = logging.getLogger(__name__)
 
@@ -30,15 +30,10 @@ def compile_config(kwargs: StringKvDict | Sequence[str] | None = None) -> Config
         if cfg_path in loaded_cfg_paths:
             raise Exception(f"Attempting to load the path '{cfg_path}' multiple times")
         loaded_cfg_paths.append(cfg_path)
-        cfg_filename = os.path.basename(cfg_path)
         cfg_dir = os.path.dirname(cfg_path)
-        cfg_path = None
-        # TODO: make common base environment with task templates
-        jinja_env = jinja2.Environment(undefined=jinja2.StrictUndefined, loader=jinja2.FileSystemLoader(cfg_dir))
-
-        tpl = jinja_env.get_template(cfg_filename)
-        cfg_iter: StringKeyDict = yaml.load(tpl.render({"cfg": config, "params": config.params}),
+        cfg_iter: StringKeyDict = yaml.load(jinja_render_from_file(cfg_path, {"cfg": config, "params": config.params}),
                                             Loader=yaml.FullLoader)
+        cfg_path = None
 
         config = dict_deep_merge(config.model_dump(), cfg_iter)
         config = Config.model_validate(config)
