@@ -1,6 +1,5 @@
 from datetime import datetime
 import logging
-from typing import Any
 
 from ..config.types import Config
 from ..environments.environment import BaseEnvironment
@@ -42,11 +41,12 @@ def run(target: str, config: Config, args: list[str]) -> None:
     executor = _get_executor(task, target_env)
 
     task.execution_start = datetime.now()
-    result: Any = executor.execute(task, target_env)
+    task.result = executor.execute(task, target_env)
     task.execution_end = datetime.now()
+
     print_result = config.io.print_result if task.template.print_result is None else task.template.print_result
     if print_result:
-        print(result)
+        print(task.result)
     log.info("Execution started at {} and finished at {}. Time elapsed: {}"
              .format(task.execution_start, task.execution_start, task.execution_end - task.execution_start))
 
