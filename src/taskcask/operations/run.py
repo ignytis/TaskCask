@@ -1,4 +1,3 @@
-from datetime import datetime
 import logging
 
 from ..config.types import Config
@@ -10,7 +9,8 @@ from ..task_templates.task_template import BaseTaskTemplate
 from ..task_templates.factory import get_task_template_from_dict
 from ..typedefs import TaskTemplateDefinition
 from ..utils.reflection import get_all_subclasses
-
+from ..events.listeners import BaseTaskPreExecuteListener, BaseTaskPostExecuteListener
+from ..events.types import PreExecuteEvent, PostExecuteEvent
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +24,9 @@ def run(target: str, config: Config, args: list[str]) -> None:
         args (list[str]): task arguments
     """
     log.info("Running a command...")
+
+    BaseTaskPreExecuteListener.register_listeners()
+    BaseTaskPostExecuteListener.register_listeners()
 
     if target.count("@") > 1:
         raise ValueError("Too many '@' characters in target."
@@ -40,15 +43,13 @@ def run(target: str, config: Config, args: list[str]) -> None:
     )
     executor = _get_executor(task, target_env)
 
-    task.execution_start = datetime.now()
+    BaseTaskPreExecuteListener.process_event(PreExecuteEvent(task=task))
     task.result = executor.execute(task, target_env)
-    task.execution_end = datetime.now()
+    BaseTaskPostExecuteListener.process_event(PostExecuteEvent(task=task))
 
     print_result = config.io.print_result if task.template.print_result is None else task.template.print_result
     if print_result:
         print(task.result)
-    log.info("Execution started at {} and finished at {}. Time elapsed: {}"
-             .format(task.execution_start, task.execution_start, task.execution_end - task.execution_start))
 
 
 def _get_task_template(config: Config, task_template_id: str) -> BaseTaskTemplate:
