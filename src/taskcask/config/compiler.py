@@ -18,10 +18,10 @@ RE_UNDERSCORE = re.compile(r"_{2,}")
 
 def compile_config(kwargs: StringKvDict | Sequence[str] | None = None) -> Config:
     """
-    Compiles the configuration from *.yaml.jinja2 files
+    Compiles the configuration from *.tcask files
     """
     config = Config()
-    cfg_paths = os.getenv("TASKCASK_CONFIG", os.path.join(config.sys.home, ".taskcask", "config.toml.jinja2")) \
+    cfg_paths = os.getenv("TASKCASK_CONFIG", os.path.join(config.sys.home, ".taskcask", "config.tcask")) \
         .split(os.pathsep)
     loaded_cfg_paths = []  # protection against recursion
 

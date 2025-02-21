@@ -10,7 +10,7 @@ environments:
       CUSTOM_PARAM: target_local_env_value
       ENV: "local"
   {% filter indent(2) %}
-  {%- include "environments/ssh_raspberrypi.yaml.jinja2" -%}
+  {%- include "environments/ssh_raspberrypi.tcask" -%}
   {% endfilter %}
   docker:
     kind: docker

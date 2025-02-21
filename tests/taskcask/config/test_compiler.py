@@ -19,7 +19,7 @@ params:
 
 "@taskcask":
   load_next:
-  - another_config.yaml.jinja2
+  - another_config.tcask
 """
 
 FILE_CONFIG_CONTENTS_COMPOSITE_SECOND = """\

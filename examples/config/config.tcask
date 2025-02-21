@@ -6,4 +6,4 @@ params:
 
 "@taskcask":
   load_next:
-  - config.main.yaml.jinja2
+  - config.main.tcask
