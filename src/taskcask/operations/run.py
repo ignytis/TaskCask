@@ -43,9 +43,9 @@ def run(target: str, config: Config, args: list[str]) -> None:
     )
     executor = _get_executor(task, target_env)
 
-    BaseTaskPreExecuteListener.process_event(PreExecuteEvent(task=task))
+    BaseTaskPreExecuteListener.process_event(PreExecuteEvent(environment=target_env, task=task))
     task.result = executor.execute(task, target_env)
-    BaseTaskPostExecuteListener.process_event(PostExecuteEvent(task=task))
+    BaseTaskPostExecuteListener.process_event(PostExecuteEvent(environment=target_env, task=task))
 
     print_result = config.io.print_result if task.template.print_result is None else task.template.print_result
     if print_result:
