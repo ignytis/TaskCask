@@ -3,12 +3,10 @@ import os
 import re
 from typing import Sequence
 
-import yaml
-
+from ..config.tcask_file_loader import tcask_file_load_with_config
 from ..typedefs import StringKeyDict, StringKvDict
 from .types import Config
 from ..utils.dict import dict_deep_merge, dict_unflatten
-from ..utils.jinja import jinja_render_from_file
 
 log = logging.getLogger(__name__)
 
@@ -31,8 +29,7 @@ def compile_config(kwargs: StringKvDict | Sequence[str] | None = None) -> Config
             raise Exception(f"Attempting to load the path '{cfg_path}' multiple times")
         loaded_cfg_paths.append(cfg_path)
         cfg_dir = os.path.dirname(cfg_path)
-        cfg_iter: StringKeyDict = yaml.load(jinja_render_from_file(cfg_path, {"cfg": config, "params": config.params}),
-                                            Loader=yaml.FullLoader)
+        cfg_iter: StringKeyDict = tcask_file_load_with_config(cfg_path, config)
         cfg_path = None
 
         config = dict_deep_merge(config.model_dump(), cfg_iter)

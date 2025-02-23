@@ -1,10 +1,8 @@
 from pathlib import Path
 from typing import Generator
 
-import yaml
-
 from ..config.types import Config
-from ..utils.jinja import jinja_render_from_file
+from ..config.tcask_file_loader import tcask_file_load_with_config
 from ..typedefs import TaskTemplateDefinition
 
 
@@ -15,5 +13,4 @@ def get_task_template_definitions(config: Config) -> Generator[dict[str, TaskTem
     """
     for loader_cfg_path in config.task_templates.lookup_dirs:
         for task_def_tpl_path in Path(loader_cfg_path).rglob("*.tcask"):
-            yield yaml.load(jinja_render_from_file(task_def_tpl_path, {"cfg": config, "params": config.params}),
-                            Loader=yaml.FullLoader)
+            yield tcask_file_load_with_config(task_def_tpl_path, config)
