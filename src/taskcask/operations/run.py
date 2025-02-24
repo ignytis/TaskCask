@@ -9,8 +9,8 @@ from ..task_templates.task_template import BaseTaskTemplate
 from ..task_templates.factory import get_task_template_from_dict
 from ..typedefs import TaskTemplateDefinition
 from ..utils.reflection import get_all_subclasses
-from ..events.listeners import BaseTaskPreExecuteListener, BaseTaskPostExecuteListener
-from ..events.types import PreExecuteEvent, PostExecuteEvent
+from ..events import listeners
+from ..events import types as event_types
 
 log = logging.getLogger(__name__)
 
@@ -25,8 +25,9 @@ def run(target: str, config: Config, args: list[str]) -> None:
     """
     log.info("Running a command...")
 
-    BaseTaskPreExecuteListener.register_listeners()
-    BaseTaskPostExecuteListener.register_listeners()
+    listeners.BaseTaskPreExecuteListener.register_listeners()
+    listeners.BaseTaskPostExecuteListener.register_listeners()
+    listeners.BaseGetTargetEnvironmentListener.register_listeners()
 
     if target.count("@") > 1:
         raise ValueError("Too many '@' characters in target."
@@ -34,18 +35,19 @@ def run(target: str, config: Config, args: list[str]) -> None:
     elif "@" not in target:
         target += "@"
     [task_template_id, target_env] = target.split("@")
-    target_env = _get_target_env(config, target_env)
 
     task_tpl = _get_task_template(config, task_template_id)
     task = Task(
         template=task_tpl,
         args=args,
     )
+    target_env = _get_target_env(config, task, target_env)
     executor = _get_executor(task, target_env)
 
-    BaseTaskPreExecuteListener.process_event(PreExecuteEvent(environment=target_env, task=task))
+    listeners.BaseTaskPreExecuteListener.process_event(event_types.PreExecuteEvent(environment=target_env, task=task))
+    log.info(f"Executing a task '{task.id}' from template '{task.template.id}'...")
     task.result = executor.execute(task, target_env)
-    BaseTaskPostExecuteListener.process_event(PostExecuteEvent(environment=target_env, task=task))
+    listeners.BaseTaskPostExecuteListener.process_event(event_types.PostExecuteEvent(environment=target_env, task=task))
 
     print_result = config.io.print_result if task.template.print_result is None else task.template.print_result
     if print_result:
@@ -61,7 +63,7 @@ def _get_task_template(config: Config, task_template_id: str) -> BaseTaskTemplat
     if not task_tpl_def:
         raise Exception(f"Cannot find a task template definition with ID '{task_template_id}'")
 
-    return get_task_template_from_dict(task_tpl_def)
+    return get_task_template_from_dict(task_tpl_def, task_template_id)
 
 
 def _get_executor(task: Task, env: BaseEnvironment) -> BaseExecutor:
@@ -77,7 +79,11 @@ def _get_executor(task: Task, env: BaseEnvironment) -> BaseExecutor:
     return executor
 
 
-def _get_target_env(config: Config, target_env: str | None = None) -> BaseEnvironment:
+def _get_target_env(config: Config, task: Task, target_env: str | None = None) -> BaseEnvironment:
+    event = event_types.GetTargetEnvironmentEvent(task=task, target_env=target_env)
+    listeners.BaseGetTargetEnvironmentListener.process_event(event)
+    target_env = event.target_env
+
     if not target_env:
         target_env = "local"
 

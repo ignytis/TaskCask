@@ -23,6 +23,7 @@ class BaseListener(ABC):
         global _listeners
         _listeners[cls] = []
         for sub_cls in get_all_subclasses(cls):
+            # TODO: pass configuration to listeners
             _listeners[cls].append(sub_cls())
 
         _listeners[cls] = sorted(_listeners[cls], key=cmp_to_key(lambda a, b: a.get_priority() - b.get_priority()))
@@ -31,6 +32,10 @@ class BaseListener(ABC):
     def process_event(cls, e: BaseEvent):
         for listener in _listeners[cls]:
             listener.handle(e)
+
+
+class BaseGetTargetEnvironmentListener(BaseListener):
+    pass
 
 
 class BaseTaskPreExecuteListener(BaseListener):

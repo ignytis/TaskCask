@@ -6,6 +6,7 @@ class BaseTaskTemplate(BaseModel):
     """
     A base class for task templates
     """
+    id: str
     kind: str
     """A discriminator. Determines which subclass will be loaded"""
     print_result: bool | None = None
