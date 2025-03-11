@@ -1,19 +1,15 @@
 import importlib
 import importlib.util
-import io
 import logging
 from typing import Any
 
-from ...environments.environment import BaseEnvironment
-from ..environments.enviromnent import LocalEnvironment, SshEnvironment
-from ...executors.executor import BaseExecutor
-from ...task import Task
+from ..environments.enviromnent import LocalEnvironment
 from ..task_templates.python import PythonTaskTemplate
-from ...utils.sys import args_to_args_and_kwargs
 
-
-def _is_supported_env(env: BaseEnvironment) -> bool:
-    return isinstance(env, LocalEnvironment) or isinstance(env, SshEnvironment)
+from taskcask_common.environment import BaseEnvironment
+from taskcask_common.executor import BaseExecutor
+from taskcask_common.task import Task
+from taskcask_common.utils.sys import args_to_args_and_kwargs
 
 
 class PythonExecutor(BaseExecutor):
@@ -24,7 +20,7 @@ class PythonExecutor(BaseExecutor):
 
     def can_execute(task: Task, env: BaseEnvironment) -> bool:
         return isinstance(task.template, PythonTaskTemplate) \
-            and _is_supported_env(env)
+            and isinstance(env, LocalEnvironment)
 
     def execute(self, task: Task, env: BaseEnvironment) -> Any:
         tpl: PythonTaskTemplate = task.template
@@ -43,25 +39,8 @@ class PythonExecutor(BaseExecutor):
         kwargs = {**tpl.kwargs, **task_kwargs}
 
         output: str = None
-        if isinstance(env, LocalEnvironment):
-            function = getattr(module, function_name)
-            output = function(*args, **kwargs)
-        elif isinstance(env, SshEnvironment):
-            try:
-                from fabric import Connection
-            except ImportError:
-                raise Exception("Cannot import Fabric. Please install the application with 'ssh' extra")
-
-            with open(module.__file__, "r") as f:
-                py_code = f.read()
-            fn_signature = _format_function_signature(args, kwargs)
-            py_code += f"\n{function_name}({fn_signature})"
-            py_code = io.StringIO(py_code)
-            with Connection(env.host, user=env.user, port=env.port) as c:
-                result = c.run("python -", hide=True, env=env.env, in_stream=py_code)
-            output = result.stdout
-        else:
-            raise NotImplementedError(f"Unknown environment: {env}")
+        function = getattr(module, function_name)
+        output = function(*args, **kwargs)
 
         return output
 

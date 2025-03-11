@@ -3,14 +3,14 @@ import subprocess
 import shlex
 from typing import Any
 
-from ...environments.environment import BaseEnvironment
-from ...executors.executor import BaseExecutor
-from ...task import Task
 from ...stdlib.task_templates.system_command import SystemCommandTaskTemplate
-from ..environments.enviromnent import DockerEnvironment, LocalEnvironment, SshEnvironment
+from ..environments.enviromnent import DockerEnvironment, LocalEnvironment
 
+from taskcask_common.environment import BaseEnvironment
+from taskcask_common.executor import BaseExecutor
+from taskcask_common.task import Task
 
-_SUPPORTED_ENV_CLASSES = [DockerEnvironment, LocalEnvironment, SshEnvironment]
+_SUPPORTED_ENV_CLASSES = [DockerEnvironment, LocalEnvironment]
 
 
 def _is_supported_env(env: BaseEnvironment) -> bool:
@@ -35,8 +35,6 @@ class SystemCommandExecutor(BaseExecutor):
             return self._run_docker(task, env)
         elif isinstance(env, LocalEnvironment):
             return self._run_locally(task, env)
-        elif isinstance(env, SshEnvironment):
-            return self._run_ssh(task, env)
         else:
             raise NotImplementedError(f"Unsupported target environment: {env.kind}")
 
@@ -65,24 +63,6 @@ class SystemCommandExecutor(BaseExecutor):
         cmd = tpl.cmd + task.args
         env_dict = {**env.env, **tpl.env}
         return subprocess.check_output(cmd, env=env_dict).decode("utf-8")
-
-    def _run_ssh(self, task: Task, env: SshEnvironment):
-        """
-        Run a system command on a remove server using SSH
-        """
-        try:
-            from fabric import Connection
-        except ImportError:
-            raise Exception("Cannot import Fabric. Please install the application with 'ssh' extra")
-
-        tpl: SystemCommandTaskTemplate = task.template
-        cmd = tpl.cmd + task.args
-        env_dict = {**env.env, **tpl.env}
-        command_string = " ".join(['"'+part+'"' if " " in part else part for part in cmd])
-
-        with Connection(env.host, user=env.user, port=env.port) as c:
-            result = c.run(command_string, hide=True, env=env_dict)
-        return result.stdout
 
 
 def _format_command(args: list[str]) -> str:

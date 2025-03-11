@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import Literal
 
-from ...environments.environment import BaseEnvironment
-from ...typedefs import EnvVars, BaseModel
+from taskcask_common.environment import BaseEnvironment
+from taskcask_common.typedefs import EnvVars, BaseModel
 
 
 class LocalEnvironment(BaseEnvironment):
@@ -11,18 +11,6 @@ class LocalEnvironment(BaseEnvironment):
     """
     kind: Literal["local"] = "local"
     env: EnvVars
-    """Environment variables"""
-
-
-class SshEnvironment(BaseEnvironment):
-    """
-    Remote server (SSH connection)
-    """
-    kind: Literal["ssh"] = "ssh"
-    env: EnvVars
-    host: str
-    port: str = "22"
-    user: str
     """Environment variables"""
 
 
@@ -43,7 +31,7 @@ class DockerEnvironmentVolume(BaseModel):
 
 class DockerEnvironment(BaseEnvironment):
     """
-    Remote server (SSH connection)
+    Docker container
     """
     kind: Literal["docker"] = "docker"
     env: EnvVars

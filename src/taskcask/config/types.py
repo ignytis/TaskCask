@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, model_validator
 
-from ..typedefs import StringKeyDict
+from taskcask_common.typedefs import StringKeyDict
 
 
 class Io(BaseModel):

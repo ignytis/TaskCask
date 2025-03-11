@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from taskcask.events.listeners import BaseListener
-from taskcask.events.types import BaseEvent
+from taskcask_common.events.listeners import BaseListener
+from taskcask_common.events.types import BaseEvent
 
 
 class MockEvent(BaseEvent):

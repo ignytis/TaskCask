@@ -29,4 +29,3 @@ Hello, John Doe! It's 2025-02-11T12:15:06. Sample: target_local_env_value. Deplo
 ## Known issues / TODO
 
 - Executors: map the process-specific exception into some general TaskException
-- SSH environment: pass parameters (password / custom path to key etc) into module

@@ -3,7 +3,7 @@ from typing import Generator
 
 from ..config.types import Config
 from ..config.tcask_file_loader import tcask_file_load_with_config
-from ..typedefs import TaskTemplateDefinition
+from taskcask_common.typedefs import TaskTemplateDefinition
 
 
 def get_task_template_definitions(config: Config) -> Generator[dict[str, TaskTemplateDefinition], None, None]:

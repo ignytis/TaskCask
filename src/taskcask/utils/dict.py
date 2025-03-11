@@ -1,5 +1,5 @@
-from ..typedefs import StringKeyDict
-from ..utils.reflection import is_scalar
+from taskcask_common.typedefs import StringKeyDict
+from taskcask_common.utils.reflection import is_scalar
 
 
 def dict_deep_merge(*dicts: StringKeyDict) -> StringKeyDict:

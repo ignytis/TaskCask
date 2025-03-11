@@ -4,9 +4,10 @@ import re
 from typing import Sequence
 
 from ..config.tcask_file_loader import tcask_file_load_with_config
-from ..typedefs import StringKeyDict, StringKvDict
 from .types import Config
 from ..utils.dict import dict_deep_merge, dict_unflatten
+
+from taskcask_common.typedefs import StringKeyDict, StringKvDict
 
 log = logging.getLogger(__name__)
 

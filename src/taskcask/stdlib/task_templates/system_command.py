@@ -1,7 +1,7 @@
 from typing import Literal
 
-from ...task_templates.task_template import BaseTaskTemplate
-from ...typedefs import StringKvDict
+from taskcask_common.task_template import BaseTaskTemplate
+from taskcask_common.typedefs import StringKvDict
 
 
 class SystemCommandTaskTemplate(BaseTaskTemplate):
