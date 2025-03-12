@@ -3,7 +3,7 @@ from typing import Any, Union, Annotated
 from pydantic import TypeAdapter, Discriminator
 
 from taskcask_common.utils.reflection import get_all_subclasses
-from taskcask_common.task_template import BaseTaskTemplate
+from taskcask_common.task_templates.base import BaseTaskTemplate
 
 
 def get_task_template_from_dict(d: dict[str, Any], id: str) -> BaseTaskTemplate:

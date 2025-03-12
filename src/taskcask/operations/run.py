@@ -10,7 +10,7 @@ from taskcask_common.events import listeners
 from taskcask_common.events import types as event_types
 from taskcask_common.executor import BaseExecutor
 from taskcask_common.task import Task
-from taskcask_common.task_template import BaseTaskTemplate
+from taskcask_common.task_templates.base import BaseTaskTemplate
 
 from taskcask_common.typedefs import TaskTemplateDefinition
 

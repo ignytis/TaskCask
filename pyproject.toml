@@ -30,9 +30,6 @@ dependencies = [
 cli = [
   "click>=8.1.8,<9.0.0",
 ]
-docker = [
-  "docker>=7.1.0,<8.0.0"
-]
 
 [project.scripts]
 tcask = "taskcask.cli.main:cmd_group_main"

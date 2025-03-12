@@ -4,11 +4,11 @@ import logging
 from typing import Any
 
 from ..environments.enviromnent import LocalEnvironment
-from ..task_templates.python import PythonTaskTemplate
 
 from taskcask_common.environment import BaseEnvironment
 from taskcask_common.executor import BaseExecutor
 from taskcask_common.task import Task
+from taskcask_common.task_templates.python import PythonTaskTemplate
 from taskcask_common.utils.sys import args_to_args_and_kwargs
 
 
