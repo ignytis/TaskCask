@@ -18,7 +18,7 @@ params:
   greeting: "Hello, {{ name }}!"
 
 "@taskcask":
-  load_next:
+  load_next_defer:
   - another_config.tcask
 """
 

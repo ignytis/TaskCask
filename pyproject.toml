@@ -24,6 +24,7 @@ dependencies = [
   "pydantic>=2.10.5,<3.0.0",
   "PyYAML>=6.0.2,<7.0.0",
   "taskcask-common<1.0.0",
+  "configtpl~=1.0.0"
 ]
 
 [project.optional-dependencies]

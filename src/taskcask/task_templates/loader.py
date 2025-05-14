@@ -1,8 +1,9 @@
 from pathlib import Path
 from typing import Generator
 
+from configtpl.config_builder import ConfigBuilder
+
 from ..config.types import Config
-from ..config.tcask_file_loader import tcask_file_load_with_config
 from taskcask_common.typedefs import TaskTemplateDefinition
 
 
@@ -11,6 +12,7 @@ def get_task_template_definitions(config: Config) -> Generator[dict[str, TaskTem
     Generates the dictionaries of task template definitions (which are dicrionaties of task template attributes).
     Keys are task template identifiers.
     """
+    builder = ConfigBuilder(directives_key="@taskcask")
     for loader_cfg_path in config.task_templates.lookup_dirs:
         for task_def_tpl_path in Path(loader_cfg_path).rglob("*.tcask"):
-            yield tcask_file_load_with_config(task_def_tpl_path, config)
+            yield builder.build_from_files(str(task_def_tpl_path), ctx={"cfg": config})

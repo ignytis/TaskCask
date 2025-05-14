@@ -5,5 +5,5 @@ params:
     dns: "{{ deployment_name }}.example.local"
 
 "@taskcask":
-  load_next:
+  load_next_defer:
   - config.main.tcask
