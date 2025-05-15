@@ -20,7 +20,7 @@ def compile_config(kwargs: StringKvDict | Sequence[str] | None = None) -> Config
     Compiles the configuration from *.tcask files
     """
     bootstrap_config = Config()
-    builder = ConfigBuilder(defaults={"cfg": bootstrap_config}, directives_key="@taskcask")
+    builder = ConfigBuilder(defaults={"cfg": bootstrap_config})
     cfg_paths = os.getenv("TASKCASK_CONFIG", os.path.join(bootstrap_config.sys.home, ".taskcask", "config.tcask"))
     cfg_env = {_format_env_key(k): v for k, v in os.environ.items() if k.startswith(CFG_ENV_PREFIX)}
     config = builder.build_from_files(cfg_paths)

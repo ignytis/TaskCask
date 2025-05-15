@@ -3,7 +3,3 @@ params:
   deployment:
     name: "{{ deployment_name }}"
     dns: "{{ deployment_name }}.example.local"
-
-"@taskcask":
-  load_next_defer:
-  - config.main.tcask

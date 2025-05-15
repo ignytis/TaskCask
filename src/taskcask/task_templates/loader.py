@@ -12,7 +12,7 @@ def get_task_template_definitions(config: Config) -> Generator[dict[str, TaskTem
     Generates the dictionaries of task template definitions (which are dicrionaties of task template attributes).
     Keys are task template identifiers.
     """
-    builder = ConfigBuilder(directives_key="@taskcask")
+    builder = ConfigBuilder()
     for loader_cfg_path in config.task_templates.lookup_dirs:
         for task_def_tpl_path in Path(loader_cfg_path).rglob("*.tcask"):
             yield builder.build_from_files(str(task_def_tpl_path), ctx={"cfg": config})
